@@ -1,4 +1,4 @@
-package br.com.miguelpereira.hash;
+package br.ufu.miguelpereira.hash;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;

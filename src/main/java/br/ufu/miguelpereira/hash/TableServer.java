@@ -1,9 +1,9 @@
-package br.com.miguelpereira.hash;
+package br.ufu.miguelpereira.hash;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import br.com.miguelpereira.hash.MD5;
+import br.ufu.miguelpereira.hash.MD5;
 import io.netty.util.internal.StringUtil;
 
 public class TableServer {
