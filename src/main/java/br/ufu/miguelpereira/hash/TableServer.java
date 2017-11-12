@@ -21,7 +21,8 @@ public class TableServer {
 			maptHashServer = new HashMap<String,String>();
 			
 			for (int i = 0; i < Integer.valueOf(numberServers); i++) {
-				String hash = MD5.hash(port + i);
+				Integer portServer = Integer.valueOf(port) + i;
+				String hash = MD5.hash(portServer.toString());
 				maptHashServer.put(port + i, hash);
 				
 			}
