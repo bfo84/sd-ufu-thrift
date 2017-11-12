@@ -83,9 +83,30 @@ public class GraphHandler implements Operations.Iface {
         }
     }
 
+    public int processRequest(int vertice){
+        try{
+            int server = MD5.md5(String.format("%d", vertice), String.format("%d", N));
+            return server;
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        return -1;
+    }
 
     @Override
     public boolean createVertex(int nome, int cor, String descricao, double peso) {
+        int server = processRequest(nome);
+        if(server != selfId){
+            try {
+                //create connection
+                boolean p = clients[0].createVertex(nome, cor, descricao, peso);
+                //close connection
+                return p;
+            }catch (Exception e){
+                System.out.println(e.getCause());
+                //throw
+            }
+        }
         synchronized (G.getV()) { //Lock na lista para evitar duplicidade de nome
             if (G.getV() != null) {
                 for (Vertex v : G.getV()) {
@@ -169,6 +190,18 @@ public class GraphHandler implements Operations.Iface {
 
     @Override
     public boolean updateVertex(int nomeUp, Vertex V) {
+        int server = processRequest(nomeUp);
+        if(server != selfId){
+            try {
+                //create connection
+                boolean p = clients[0].updateVertex(nomeUp,V);
+                //close connection
+                return p;
+            }catch (Exception e){
+                System.out.println(e.getCause());
+                //throw
+            }
+        }
         if (V == null) {
             return false;
         }
@@ -250,6 +283,18 @@ public class GraphHandler implements Operations.Iface {
 
     @Override
     public Vertex getVertex(int nome) {
+        int server = processRequest(nome);
+        if(server != selfId){
+            try {
+                //create connection
+                Vertex p = clients[0].getVertex(nome);
+                //close connection
+                return p;
+            }catch (Exception e){
+                System.out.println(e.getCause());
+                //throw
+            }
+        }
         synchronized (G.getV()) {
             if (!G.getV().isEmpty()) {
                 for (Vertex v : G.getV()) {
