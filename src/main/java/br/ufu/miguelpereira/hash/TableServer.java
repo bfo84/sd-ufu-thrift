@@ -13,7 +13,7 @@ public class TableServer {
 	 * @param numberServers
 	 * @return
 	 */
-	public Map<String, String> getMapServers(String numberServers, String port){
+	public static Map<String, String> getMapServers(String numberServers, String port){
 
 		Map<String, String> maptHashServer = null;
 		if(!StringUtil.isNullOrEmpty(numberServers) && Integer.valueOf(numberServers) > 0) {

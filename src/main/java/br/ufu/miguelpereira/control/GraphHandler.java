@@ -11,6 +11,7 @@ import java.io.ObjectInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
@@ -25,10 +26,9 @@ public class GraphHandler implements Operations.Iface {
     private Object fileLock = new Object();
     private static Map<String, String> ports;
 
-    private TTransport transports;
-    private TProtocol protocols;
-    private Graph.Client clients;
-    private static int ports[]; // array of ports for others servers
+    private TTransport []transports;
+    private TProtocol []protocols;
+    private Operations.Client []clients;
     private int selfPort; // number of the port of this server
     private static int N; // number of servers
     private int selfId;
@@ -41,9 +41,9 @@ public class GraphHandler implements Operations.Iface {
         int firstPort = Integer.parseInt(args[2]);
         selfPort = firstPort + selfId;
         
-        transports = new TTransport;
-        protocols = new TProtocol;
-        clients = new Graph.Client;
+        transports = new TTransport[1];
+        protocols = new TProtocol[1];
+        clients = new Operations.Client[1];
     }
 
     @Override
