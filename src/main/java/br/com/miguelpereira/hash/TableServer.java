@@ -8,15 +8,14 @@ import io.netty.util.internal.StringUtil;
 
 public class TableServer {
 	
-	private Map<String, String> maptHashServer;
-
 	/**
 	 * Metodo responsavel por pegar a porta do servidor com o seu respectivo hash
 	 * @param numberServers
 	 * @return
 	 */
 	public Map<String, String> getMapServers(String numberServers, String port){
-		
+
+		Map<String, String> maptHashServer = null;
 		if(!StringUtil.isNullOrEmpty(numberServers) && Integer.valueOf(numberServers) > 0) {
 			
 			maptHashServer = new HashMap<String,String>();
