@@ -2,6 +2,8 @@ package br.ufu.miguelpereira.control;
 
 import br.ufu.miguelpereira.thrift.*;
 
+import br.ufu.miguelpereira.hash.*;
+
 import java.io.FileOutputStream;
 import java.io.ObjectOutputStream;
 import java.io.FileInputStream;
@@ -10,11 +12,39 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.thrift.protocol.TBinaryProtocol;
+import org.apache.thrift.protocol.TProtocol;
+import org.apache.thrift.transport.TSocket;
+import org.apache.thrift.transport.TTransport;
+import org.apache.thrift.transport.TTransportException;
+
 public class GraphHandler implements Operations.Iface {
 
     //private ArrayList<Graph> Graphs = new ArrayList<Graph>();
     private Graph G = new Graph(new ArrayList<Vertex>(), new ArrayList<Edge>());
     private Object fileLock = new Object();
+    private static Map<String, String> ports;
+
+    private TTransport transports;
+    private TProtocol protocols;
+    private Graph.Client clients;
+    private static int ports[]; // array of ports for others servers
+    private int selfPort; // number of the port of this server
+    private static int N; // number of servers
+    private int selfId;
+
+    public void GraphHandler(String []args) {
+        ports = TableServer.getMapServers(args[0], args[2]);
+
+        N = Integer.parseInt(args[0]);
+        selfId = Integer.parseInt(args[1]);
+        int firstPort = Integer.parseInt(args[2]);
+        selfPort = firstPort + selfId;
+        
+        transports = new TTransport;
+        protocols = new TProtocol;
+        clients = new Graph.Client;
+    }
 
     @Override
     public void loadGraph(String caminho) {
