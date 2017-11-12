@@ -11,6 +11,7 @@
 		<slf4j.version>1.7.24</slf4j.version>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
+		<atomix.version>1.0.0-rc9</atomix.version>
 	</properties>
 
 	<dependencies>
@@ -25,6 +26,11 @@
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 			<version>${slf4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.atomix</groupId>
+			<artifactId>atomix-all</artifactId>
+			<version>${atomix.version}</version>
 		</dependency>
 	</dependencies>
 
