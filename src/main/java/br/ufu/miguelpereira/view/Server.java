@@ -16,7 +16,7 @@ public class Server {
     public static Properties getProp() throws IOException {
         Properties props = new Properties();
         FileInputStream file = new FileInputStream(
-                "host.properties");
+                "./src/main/resources/host.properties");
         props.load(file);
         return props;
     }
