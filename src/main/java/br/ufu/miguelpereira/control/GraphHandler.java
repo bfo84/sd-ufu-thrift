@@ -2,6 +2,8 @@ package br.ufu.miguelpereira.control;
 
 import br.ufu.miguelpereira.thrift.*;
 
+import br.ufu.miguelpereira.hash.*;
+
 import java.io.FileOutputStream;
 import java.io.ObjectOutputStream;
 import java.io.FileInputStream;
@@ -9,12 +11,40 @@ import java.io.ObjectInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
+import org.apache.thrift.protocol.TBinaryProtocol;
+import org.apache.thrift.protocol.TProtocol;
+import org.apache.thrift.transport.TSocket;
+import org.apache.thrift.transport.TTransport;
+import org.apache.thrift.transport.TTransportException;
 
 public class GraphHandler implements Operations.Iface {
 
     //private ArrayList<Graph> Graphs = new ArrayList<Graph>();
     private Graph G = new Graph(new ArrayList<Vertex>(), new ArrayList<Edge>());
     private Object fileLock = new Object();
+    private static Map<String, String> ports;
+
+    private TTransport []transports;
+    private TProtocol []protocols;
+    private Operations.Client []clients;
+    private int selfPort; // number of the port of this server
+    private static int N; // number of servers
+    private int selfId;
+
+    public void GraphHandler(String []args) {
+        ports = TableServer.getMapServers(args[0], args[2]);
+
+        N = Integer.parseInt(args[0]);
+        selfId = Integer.parseInt(args[1]);
+        int firstPort = Integer.parseInt(args[2]);
+        selfPort = firstPort + selfId;
+        
+        transports = new TTransport[1];
+        protocols = new TProtocol[1];
+        clients = new Operations.Client[1];
+    }
 
     @Override
     public void loadGraph(String caminho) {
@@ -53,9 +83,30 @@ public class GraphHandler implements Operations.Iface {
         }
     }
 
+    public int processRequest(int vertice){
+        try{
+            int server = MD5.md5(String.format("%d", vertice), String.format("%d", N));
+            return server;
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        return -1;
+    }
 
     @Override
     public boolean createVertex(int nome, int cor, String descricao, double peso) {
+        int server = processRequest(nome);
+        if(server != selfId){
+            try {
+                //create connection
+                boolean p = clients[0].createVertex(nome, cor, descricao, peso);
+                //close connection
+                return p;
+            }catch (Exception e){
+                System.out.println(e.getCause());
+                //throw
+            }
+        }
         synchronized (G.getV()) { //Lock na lista para evitar duplicidade de nome
             if (G.getV() != null) {
                 for (Vertex v : G.getV()) {
@@ -139,6 +190,18 @@ public class GraphHandler implements Operations.Iface {
 
     @Override
     public boolean updateVertex(int nomeUp, Vertex V) {
+        int server = processRequest(nomeUp);
+        if(server != selfId){
+            try {
+                //create connection
+                boolean p = clients[0].updateVertex(nomeUp,V);
+                //close connection
+                return p;
+            }catch (Exception e){
+                System.out.println(e.getCause());
+                //throw
+            }
+        }
         if (V == null) {
             return false;
         }
@@ -220,6 +283,18 @@ public class GraphHandler implements Operations.Iface {
 
     @Override
     public Vertex getVertex(int nome) {
+        int server = processRequest(nome);
+        if(server != selfId){
+            try {
+                //create connection
+                Vertex p = clients[0].getVertex(nome);
+                //close connection
+                return p;
+            }catch (Exception e){
+                System.out.println(e.getCause());
+                //throw
+            }
+        }
         synchronized (G.getV()) {
             if (!G.getV().isEmpty()) {
                 for (Vertex v : G.getV()) {

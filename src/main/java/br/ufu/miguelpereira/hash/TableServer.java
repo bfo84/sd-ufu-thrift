@@ -13,7 +13,7 @@ public class TableServer {
 	 * @param numberServers
 	 * @return
 	 */
-	public Map<String, String> getMapServers(String numberServers, String port){
+	public static Map<String, String> getMapServers(String numberServers, String port){
 
 		Map<String, String> maptHashServer = null;
 		if(!StringUtil.isNullOrEmpty(numberServers) && Integer.valueOf(numberServers) > 0) {
@@ -23,7 +23,7 @@ public class TableServer {
 			for (int i = 0; i < Integer.valueOf(numberServers); i++) {
 				Integer portServer = Integer.valueOf(port) + i;
 				String hash = MD5.hash(portServer.toString());
-				maptHashServer.put(port + i, hash);
+				maptHashServer.put(portServer.toString(), hash);
 				
 			}
 		}		
