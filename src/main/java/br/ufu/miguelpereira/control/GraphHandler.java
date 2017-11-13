@@ -46,6 +46,24 @@ public class GraphHandler implements Operations.Iface {
         clients = new Operations.Client[1];
     }
 
+    public void connectToServerId(int id) {
+        int port = Integer.valueOf(ports.get(Integer.toString(id)));
+        try {
+            transports[0] = new TSocket("localhost", port);
+            transports[0].open();
+            protocols[0] = new TBinaryProtocol(transports[0]);
+            clients[0] = new Operations.Client(protocols[0]);
+            System.out.println("Server " + selfPort + " connected to server " + port);
+        } catch (TTransportException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void disconnectToServer() {
+        transports[0].close();
+        System.out.println("Connection from " + selfPort + " closed");
+    }
+
     @Override
     public void loadGraph(String caminho) {
         Object aux = null;
@@ -98,9 +116,9 @@ public class GraphHandler implements Operations.Iface {
         int server = processRequest(nome);
         if (server != selfId) {
             try {
-                //create connection
+                connectToServerId(server);
                 boolean p = clients[0].createVertex(nome, cor, descricao, peso);
-                //close connection
+                disconnectToServer();
                 return p;
             } catch (Exception e) {
                 System.out.println(e.getCause());
@@ -180,9 +198,9 @@ public class GraphHandler implements Operations.Iface {
         int server = processRequest(v1);
         if (server != selfId) {
             try {
-                //create connection
-                boolean p = clients[0].deleteEdge(v1,v2);
-                //close connection
+                connectToServerId(server);
+                boolean p = clients[0].deleteEdge(v1, v2);
+                disconnectToServer();
                 return p;
             } catch (Exception e) {
                 System.out.println(e.getCause());
@@ -193,19 +211,19 @@ public class GraphHandler implements Operations.Iface {
             synchronized (a) {
                 if (a.getV1() == v1 && a.getV2() == v2) {
                     G.getA().remove(a);
-                    if(a.getFlag() == 2){
+                    if (a.getFlag() == 2) {
                         int server2 = processRequest(v2);
                         if (server2 != selfId) {
                             try {
                                 //create connection
-                                clients[0].deleteEdge(v2,v1);
+                                clients[0].deleteEdge(v2, v1);
                                 //close connection
                             } catch (Exception e) {
                                 System.out.println(e.getCause());
                                 //throw
                             }
-                        }else{
-                            deleteEdge(v2,v1);
+                        } else {
+                            deleteEdge(v2, v1);
                         }
                     }
                     return true;
@@ -220,9 +238,9 @@ public class GraphHandler implements Operations.Iface {
         int server = processRequest(nomeUp);
         if (server != selfId) {
             try {
-                //create connection
+                connectToServerId(server);
                 boolean p = clients[0].updateVertex(nomeUp, V);
-                //close connection
+                disconnectToServer();
                 return p;
             } catch (Exception e) {
                 System.out.println(e.getCause());
@@ -313,9 +331,9 @@ public class GraphHandler implements Operations.Iface {
         int server = processRequest(nome);
         if (server != selfId) {
             try {
-                //create connection
+                connectToServerId(server);
                 Vertex p = clients[0].getVertex(nome);
-                //close connection
+                disconnectToServer();
                 return p;
             } catch (Exception e) {
                 System.out.println(e.getCause());
@@ -339,9 +357,9 @@ public class GraphHandler implements Operations.Iface {
         int server = processRequest(v1);
         if (server != selfId) {
             try {
-                //create connection
-                Edge p = clients[0].getEdge(v1,v2);
-                //close connection
+                connectToServerId(server);
+                Edge p = clients[0].getEdge(v1, v2);
+                disconnectToServer();
                 return p;
             } catch (Exception e) {
                 System.out.println(e.getCause());
