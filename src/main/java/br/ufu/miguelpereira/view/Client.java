@@ -1,20 +1,23 @@
 package br.ufu.miguelpereira.view;
 
-import br.ufu.miguelpereira.thrift.Edge;
-import br.ufu.miguelpereira.thrift.Operations;
-import br.ufu.miguelpereira.thrift.Vertex;
-
-import org.apache.thrift.transport.TTransport;
-import org.apache.thrift.transport.TSocket;
-import org.apache.thrift.protocol.TProtocol;
-import org.apache.thrift.protocol.TBinaryProtocol;
-
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 import java.util.Scanner;
 
+import org.apache.log4j.Logger;
+import org.apache.thrift.protocol.TBinaryProtocol;
+import org.apache.thrift.protocol.TProtocol;
+import org.apache.thrift.transport.TSocket;
+import org.apache.thrift.transport.TTransport;
+
+import br.ufu.miguelpereira.thrift.Edge;
+import br.ufu.miguelpereira.thrift.Operations;
+import br.ufu.miguelpereira.thrift.Vertex;
+
 public class Client {
+	
+	private final static Logger logger = Logger.getLogger(Client.class);
 
     public static Properties getProp() throws IOException {
         Properties props = new Properties();
@@ -31,10 +34,13 @@ public class Client {
         try {
             prop = getProp();
             if (!prop.isEmpty()) {
+            	logger.debug("Inicializando o clinte.");
                 hostname = prop.getProperty("prop.server.host");
                 port = Integer.parseInt(prop.getProperty("prop.server.port"));
             } else {
-                System.out.println("ERRO! Falha ao carregar arquivo de configuracao!");
+            	String messageError = "ERRO! Falha ao carregar arquivo de configuracao!";
+                System.out.println(messageError);
+                logger.error(messageError);
                 return;
             }
 
@@ -51,6 +57,7 @@ public class Client {
             double peso;
             Scanner scan = new Scanner(System.in);
 
+            logger.debug("Inicializando o menu");
             //Menu
             while (menu != 16) {
                 System.out.println("1 - Inserir Vertice");
@@ -247,6 +254,7 @@ public class Client {
             transport.close();
         } catch (Exception x) {
             x.printStackTrace();
+            logger.error(x.getMessage(), x);
         }
     }
 }
