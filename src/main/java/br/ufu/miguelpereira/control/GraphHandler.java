@@ -26,21 +26,21 @@ public class GraphHandler implements Operations.Iface {
     private Object fileLock = new Object();
     private static Map<String, String> ports;
 
-    private TTransport []transports;
-    private TProtocol []protocols;
-    private Operations.Client []clients;
+    private TTransport[] transports;
+    private TProtocol[] protocols;
+    private Operations.Client[] clients;
     private int selfPort; // number of the port of this server
     private static int N; // number of servers
     private int selfId;
 
-    public void GraphHandler(String []args) {
+    public void GraphHandler(String[] args) {
         ports = TableServer.getMapServers(args[0], args[2]);
 
         N = Integer.parseInt(args[0]);
         selfId = Integer.parseInt(args[1]);
         int firstPort = Integer.parseInt(args[2]);
         selfPort = firstPort + selfId;
-        
+
         transports = new TTransport[1];
         protocols = new TProtocol[1];
         clients = new Operations.Client[1];
@@ -83,11 +83,11 @@ public class GraphHandler implements Operations.Iface {
         }
     }
 
-    public int processRequest(int vertice){
-        try{
+    public int processRequest(int vertice) {
+        try {
             int server = MD5.md5(String.format("%d", vertice), String.format("%d", N));
             return server;
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return -1;
@@ -96,13 +96,13 @@ public class GraphHandler implements Operations.Iface {
     @Override
     public boolean createVertex(int nome, int cor, String descricao, double peso) {
         int server = processRequest(nome);
-        if(server != selfId){
+        if (server != selfId) {
             try {
                 //create connection
                 boolean p = clients[0].createVertex(nome, cor, descricao, peso);
                 //close connection
                 return p;
-            }catch (Exception e){
+            } catch (Exception e) {
                 System.out.println(e.getCause());
                 //throw
             }
@@ -138,8 +138,8 @@ public class GraphHandler implements Operations.Iface {
                             Edge aux = new Edge(v2, v1, peso, flag, descricao);
                             if (!ifEquals(aux)) { //Se nao existir, cria
                                 G.getA().add(aux);
-                            }else{//Se existir, atualiza
-                                updateEdge(aux.getV1(),aux.getV2(), aux);
+                            } else {//Se existir, atualiza
+                                updateEdge(aux.getV1(), aux.getV2(), aux);
                             }
                         }
                         return true;
@@ -154,19 +154,19 @@ public class GraphHandler implements Operations.Iface {
     @Override
     public boolean deleteVertex(int nome) {
         ArrayList<Edge> forDeletion = new ArrayList<>();
+        synchronized (G.getA()) {
+            for (Edge a : G.getA()) {
+                if (a.getV1() == nome || a.getV2() == nome) {
+                    forDeletion.add(a);
+                }
+            }
+            for (Edge a : forDeletion) {
+                G.getA().remove(a);
+            }
+        }
         for (Vertex v : G.getV()) {
             synchronized (v) {
                 if (v.getNome() == nome) {
-                    synchronized (G.getA()) {
-                        for (Edge a : G.getA()) {
-                            if (a.getV1() == nome || a.getV2() == nome) {
-                                forDeletion.add(a);
-                            }
-                        }
-                        for (Edge a : forDeletion) {
-                            G.getA().remove(a);
-                        }
-                    }
                     G.getV().remove(v);
                     return true;
                 }
@@ -177,10 +177,37 @@ public class GraphHandler implements Operations.Iface {
 
     @Override
     public boolean deleteEdge(int v1, int v2) {
+        int server = processRequest(v1);
+        if (server != selfId) {
+            try {
+                //create connection
+                boolean p = clients[0].deleteEdge(v1,v2);
+                //close connection
+                return p;
+            } catch (Exception e) {
+                System.out.println(e.getCause());
+                //throw
+            }
+        }
         for (Edge a : G.getA()) {
             synchronized (a) {
                 if (a.getV1() == v1 && a.getV2() == v2) {
                     G.getA().remove(a);
+                    if(a.getFlag() == 2){
+                        int server2 = processRequest(v2);
+                        if (server2 != selfId) {
+                            try {
+                                //create connection
+                                clients[0].deleteEdge(v2,v1);
+                                //close connection
+                            } catch (Exception e) {
+                                System.out.println(e.getCause());
+                                //throw
+                            }
+                        }else{
+                            deleteEdge(v2,v1);
+                        }
+                    }
                     return true;
                 }
             }
@@ -191,13 +218,13 @@ public class GraphHandler implements Operations.Iface {
     @Override
     public boolean updateVertex(int nomeUp, Vertex V) {
         int server = processRequest(nomeUp);
-        if(server != selfId){
+        if (server != selfId) {
             try {
                 //create connection
-                boolean p = clients[0].updateVertex(nomeUp,V);
+                boolean p = clients[0].updateVertex(nomeUp, V);
                 //close connection
                 return p;
-            }catch (Exception e){
+            } catch (Exception e) {
                 System.out.println(e.getCause());
                 //throw
             }
@@ -243,19 +270,19 @@ public class GraphHandler implements Operations.Iface {
         for (Edge a : G.getA()) {
             synchronized (a) {
                 if (a.getV1() == nomeV1 && a.getV2() == nomeV2) {
-                    if(a.getFlag() == 2){// Se aresta antiga for bi-direcional, pega aresta v2,v1
+                    if (a.getFlag() == 2) {// Se aresta antiga for bi-direcional, pega aresta v2,v1
                         Edge b = getEdge(a.getV2(), a.getV1());
-                        synchronized (b){
-                            if(A.getFlag() == 1){// Se aresta nova for direcionada, remove aresta v2,v1
+                        synchronized (b) {
+                            if (A.getFlag() == 1) {// Se aresta nova for direcionada, remove aresta v2,v1
                                 G.getA().remove(b);
-                            }else{ // Senao, update aresta v2,v1
+                            } else { // Senao, update aresta v2,v1
                                 b.setPeso(A.getPeso());
                                 b.setFlag(A.getFlag());
                                 b.setDescricao(A.getDescricao());
                             }
                         }
-                    }else{// Se aresta antiga for direcionada
-                        if(A.getFlag() == 2){// E aresta nova for bi-direcional, cria aresta v2,v1
+                    } else {// Se aresta antiga for direcionada
+                        if (A.getFlag() == 2) {// E aresta nova for bi-direcional, cria aresta v2,v1
                             Edge aux = new Edge(A.getV2(), A.getV1(), A.getPeso(), A.getFlag(), A.getDescricao());
                             if (!ifEquals(aux)) {
                                 G.getA().add(aux);
@@ -284,13 +311,13 @@ public class GraphHandler implements Operations.Iface {
     @Override
     public Vertex getVertex(int nome) {
         int server = processRequest(nome);
-        if(server != selfId){
+        if (server != selfId) {
             try {
                 //create connection
                 Vertex p = clients[0].getVertex(nome);
                 //close connection
                 return p;
-            }catch (Exception e){
+            } catch (Exception e) {
                 System.out.println(e.getCause());
                 //throw
             }
@@ -309,6 +336,18 @@ public class GraphHandler implements Operations.Iface {
 
     @Override
     public Edge getEdge(int v1, int v2) {
+        int server = processRequest(v1);
+        if (server != selfId) {
+            try {
+                //create connection
+                Edge p = clients[0].getEdge(v1,v2);
+                //close connection
+                return p;
+            } catch (Exception e) {
+                System.out.println(e.getCause());
+                //throw
+            }
+        }
         synchronized (G.getA()) {
             if (!G.getA().isEmpty()) {
                 for (Edge a : G.getA()) {
@@ -377,12 +416,12 @@ public class GraphHandler implements Operations.Iface {
         synchronized (G.getA()) {
             for (Edge a : G.getA()) {
                 if (a.getV1() == nomeV) {
-                    if(!adjacentes.contains(getVertex(a.getV2())))
-                    adjacentes.add(getVertex(a.getV2()));
+                    if (!adjacentes.contains(getVertex(a.getV2())))
+                        adjacentes.add(getVertex(a.getV2()));
 
                 } else if (a.getV2() == nomeV) {
-                    if(!adjacentes.contains(getVertex(a.getV1())))
-                    adjacentes.add(getVertex(a.getV1()));
+                    if (!adjacentes.contains(getVertex(a.getV1())))
+                        adjacentes.add(getVertex(a.getV1()));
                 }
             }
         }
