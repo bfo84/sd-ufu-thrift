@@ -12,7 +12,7 @@ while [ $id -lt $N ]; do
 	echo Running java GraphServer $N $id $firstPort >> logs/log.txt
 	filename="logServer"$id".txt"
 	filePath=logs/$filename
-	mvn exec:java -Dexec.mainClass=br.ufu.miguelpereira.view.Server $N $id $firstPort > $filePath &
+	mvn exec:java -Dexec.mainClass=br.ufu.miguelpereira.view.Server -Dexec.args="$N $id $firstPort" > $filePath &
 	((id++))
 done
 
