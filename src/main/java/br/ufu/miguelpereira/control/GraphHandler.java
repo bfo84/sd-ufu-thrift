@@ -443,12 +443,35 @@ public class GraphHandler implements Operations.Iface {
 
     @Override
     public Graph showGraph() {
+        int server;
+        int port;
+        Graph graphLocal = new Graph(new ArrayList<Vertex>(), new ArrayList<Edge>());
+        ArrayList<Vertex> listOfVertex;
+        ArrayList<Edge> listOfEdge;
         for (Map.Entry<String, String> entry: ports.entrySet()) {
-            
+            server = Integer.parseInt(entry.getValue());
+            port = Integer.parseInt(entry.getKey());
+            if (server != selfId) {
+                try {
+                    TTransport transport = connectToServerId(port);
+                    Operations.Client client = makeInterface(transport);
+                    listOfVertex = (ArrayList<Vertex>) client.showVertex();
+                    listOfEdge = (ArrayList<Edge>) client.showEdge();
+                    graphLocal.V.addAll(listOfVertex);
+                    graphLocal.A.addAll(listOfEdge);
+                    disconnectToServer(transport);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    //throw
+                }
+            } else {
+                listOfEdge = (ArrayList<Edge>) showEdge();
+                listOfVertex = (ArrayList<Vertex>) showVertex();
+                graphLocal.V.addAll(listOfVertex);
+                graphLocal.A.addAll(listOfEdge);
+            }
         }
-        synchronized (G) {
-            return G;
-        }
+        return graphLocal;
     }
 
     @Override

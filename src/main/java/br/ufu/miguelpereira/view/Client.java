@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Scanner;
 
+import br.ufu.miguelpereira.thrift.Graph;
 import org.apache.log4j.Logger;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
@@ -126,7 +127,17 @@ public class Client {
                         break;
 
                     case 5://Mostrar grafo
-                        System.out.println(client.showGraph());
+                        Graph graphLocal = client.showGraph();
+                        System.out.println("Grafo: ");
+                        System.out.print("Vertice: ");
+                        for (Vertex v: graphLocal.getV()) {
+                            System.out.print(v.nome + ",");
+                        }
+                        System.out.print("\n");
+                        System.out.print("Aresta: ");
+                        for (Edge e: graphLocal.getA()) {
+                            System.out.print("(" + e.v1 + "," + e.v2 + ")" + ",");
+                        }
                         break;
 
                     case 6://Remover vertice
