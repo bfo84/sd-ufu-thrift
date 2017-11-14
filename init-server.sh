@@ -13,17 +13,7 @@ while [ $id -lt $N ]; do
 	filename="logServer"$id".txt"
 	serverPort=$((firstPort+id))
 	filePath=logs/$filename
-	mvn exec:java -Dexec.mainClass=br.ufu.miguelpereira.view.Server -Dexec.args="$N $id $serverPort)"  > $filePath &
+	mvn exec:java -Dexec.mainClass=br.ufu.miguelpereira.view.Server -Dexec.args="$N $id $serverPort"  > $filePath &
 	echo "Server: "$id" port" $serverPort
 	((id++))
 done
-
-id=0
-echo "Opened ports: "
-echo "Opened ports: " >> logs/log.txt
-while [ $id -lt $N ]; do
-	port=$((firstPort+id))
-	echo "-----" $port
-	echo "-----" $port >> logs/log.txt
-	((id++))
-done 
