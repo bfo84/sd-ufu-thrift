@@ -2,6 +2,7 @@ package br.ufu.miguelpereira.view;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Scanner;
 
@@ -19,31 +20,10 @@ public class Client {
 	
 	private final static Logger logger = Logger.getLogger(Client.class);
 
-    public static Properties getProp() throws IOException {
-        Properties props = new Properties();
-        FileInputStream file = new FileInputStream(
-                "host.properties");
-        props.load(file);
-        return props;
-    }
-
     public static void main(String[] args) {
-        String hostname;
-        int port;
-        Properties prop;
+        String hostname = "localhost";
+        int port = Integer.parseInt(args[0]);
         try {
-            prop = getProp();
-            if (!prop.isEmpty()) {
-            	logger.debug("Inicializando o clinte.");
-                hostname = prop.getProperty("prop.server.host");
-                port = Integer.parseInt(prop.getProperty("prop.server.port"));
-            } else {
-            	String messageError = "ERRO! Falha ao carregar arquivo de configuracao!";
-                System.out.println(messageError);
-                logger.error(messageError);
-                return;
-            }
-
 
             TTransport transport = new TSocket(hostname, port);
             transport.open();
@@ -88,8 +68,11 @@ public class Client {
                         System.out.println("Peso <double>: ");
                         peso = scan.nextDouble();
                         if (client.createVertex(v1, cor, descricao, peso)) {
+                            ArrayList<Vertex> listOfVertex = (ArrayList<Vertex>) client.showVertex();
                             System.out.println("<- Vertice inserido! ->");
-                            System.out.println(client.showVertex());
+                            for (Vertex v: listOfVertex) {
+                                System.out.println(v.nome);
+                            }
                         } else {
                             System.out.println("<- Erro! ->");
                         }
@@ -111,8 +94,11 @@ public class Client {
                         System.out.println("Digite o peso: ");
                         peso = scan.nextDouble();
                         if (client.createEdge(v1, v2, peso, cor, descricao)) {
+                            ArrayList<Edge> edgesofGraph = (ArrayList<Edge>) client.showEdge();
                             System.out.println("<- Aresta Inserida! ->");
-                            System.out.println(client.showEdge());
+                            for (Edge e: edgesofGraph) {
+                                System.out.println("Aresta (" + e.v1 + "," + e.v2 + ")");
+                            }
                         } else {
                             System.out.println("<- Erro! ->");
                         }

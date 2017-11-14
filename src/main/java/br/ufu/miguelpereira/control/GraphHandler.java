@@ -380,6 +380,9 @@ public class GraphHandler implements Operations.Iface {
 
     @Override
     public Graph showGraph() {
+        for (Map.Entry<String, String> entry: ports.entrySet()) {
+            
+        }
         synchronized (G) {
             return G;
         }
