@@ -46,21 +46,27 @@ public class GraphHandler implements Operations.Iface {
         clients = new Operations.Client[1];
     }
 
-    public void connectToServerId(int id) {
-        int port = Integer.valueOf(ports.get(Integer.toString(id)));
+    public TTransport connectToServerId(int id) {
         try {
-            transports[0] = new TSocket("localhost", port);
-            transports[0].open();
-            protocols[0] = new TBinaryProtocol(transports[0]);
-            clients[0] = new Operations.Client(protocols[0]);
+            int port = Integer.valueOf(ports.get(Integer.toString(id)));
+            TTransport transport = new TSocket("localhost", port);
+            transport.open();
             System.out.println("Server " + selfPort + " connected to server " + port);
+            return transport;
         } catch (TTransportException e) {
             e.printStackTrace();
         }
+        return null;
     }
 
-    public void disconnectToServer() {
-        transports[0].close();
+    public Operations.Client makeInterface(TTransport transport) {
+        TBinaryProtocol protocol = new TBinaryProtocol(transport);
+        Operations.Client client = new Operations.Client(protocol);
+        return client;
+    }
+
+    public void disconnectToServer(TTransport transport) {
+        transport.close();
         System.out.println("Connection from " + selfPort + " closed");
     }
 
@@ -101,10 +107,9 @@ public class GraphHandler implements Operations.Iface {
         }
     }
 
-    public int processRequest(int vertice) {
+    private int processRequest(int vertice) {
         try {
-            int server = MD5.md5(String.format("%d", vertice), String.format("%d", N));
-            return server;
+            return MD5.md5(String.format("%d", vertice), String.format("%d", N));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -116,12 +121,13 @@ public class GraphHandler implements Operations.Iface {
         int server = processRequest(nome);
         if (server != selfId) {
             try {
-                connectToServerId(server);
-                boolean p = clients[0].createVertex(nome, cor, descricao, peso);
-                disconnectToServer();
+                TTransport transport = connectToServerId(server);
+                Operations.Client client = makeInterface(transport);
+                boolean p = client.createVertex(nome, cor, descricao, peso);
+                disconnectToServer(transport);
                 return p;
             } catch (Exception e) {
-                System.out.println(e.getCause());
+                e.printStackTrace();
                 //throw
             }
         }
@@ -140,10 +146,44 @@ public class GraphHandler implements Operations.Iface {
 
     @Override
     public boolean createEdge(int v1, int v2, double peso, int flag, String descricao) {
-        int criaControl = 0;
+        int criaControl = 0; //Contador de quantos vertices existem
+
+        int server = processRequest(v1);
+        if (server != selfId) {
+            try {
+                TTransport transport = connectToServerId(server);
+                Operations.Client client = makeInterface(transport);
+                boolean p = client.createEdge(v1, v2, peso, flag, descricao);
+                disconnectToServer(transport);
+                return p;
+            } catch (Exception e) {
+                e.printStackTrace();
+                //throw
+            }
+        }
         synchronized (G.getV()) { //Lock nos vertex caso haja delecao em um dos vertex da edge
             for (Vertex v : G.getV()) {
                 if (v.getNome() == v1 || v.getNome() == v2) {
+                    criaControl++;
+                }
+            }
+            if (criaControl == 1) {
+                Vertex v = null;
+                int server2 = processRequest(v2);
+                if (server2 != selfId) {
+                    try {
+                        TTransport transport = connectToServerId(server2);
+                        Operations.Client client = makeInterface(transport);
+                        v = client.getVertex(v2);
+                        disconnectToServer(transport);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        //throw
+                    }
+                }
+                if (v == null) {
+                    return false;
+                } else {
                     criaControl++;
                 }
             }
@@ -151,8 +191,22 @@ public class GraphHandler implements Operations.Iface {
                 Edge aux2 = new Edge(v1, v2, peso, flag, descricao);
                 synchronized (G.getA()) { //Lock nas edges para evitar duplicidade
                     if (!ifEquals(aux2)) {
-                        G.getA().add(aux2);
                         if (flag == 2) {
+                            int server3 = processRequest(v1);
+                            if (server3 != selfId) {
+                                try {
+                                    TTransport transport = connectToServerId(server3);
+                                    Operations.Client client = makeInterface(transport);
+                                    boolean p = client.createEdge(v2, v1, peso, flag, descricao);
+                                    disconnectToServer(transport);
+                                    if(!p) return p;
+                                    G.getA().add(aux2);
+                                    return p;
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                    //throw
+                                }
+                            }
                             Edge aux = new Edge(v2, v1, peso, flag, descricao);
                             if (!ifEquals(aux)) { //Se nao existir, cria
                                 G.getA().add(aux);
@@ -160,8 +214,11 @@ public class GraphHandler implements Operations.Iface {
                                 updateEdge(aux.getV1(), aux.getV2(), aux);
                             }
                         }
+                        G.getA().add(aux2);
                         return true;
                     }
+                    return true;
+
                 }
 
             }
@@ -198,12 +255,13 @@ public class GraphHandler implements Operations.Iface {
         int server = processRequest(v1);
         if (server != selfId) {
             try {
-                connectToServerId(server);
-                boolean p = clients[0].deleteEdge(v1, v2);
-                disconnectToServer();
+                TTransport transport = connectToServerId(server);
+                Operations.Client client = makeInterface(transport);
+                boolean p = client.deleteEdge(v1, v2);
+                disconnectToServer(transport);
                 return p;
             } catch (Exception e) {
-                System.out.println(e.getCause());
+                e.printStackTrace();
                 //throw
             }
         }
@@ -215,11 +273,13 @@ public class GraphHandler implements Operations.Iface {
                         int server2 = processRequest(v2);
                         if (server2 != selfId) {
                             try {
-                                //create connection
-                                clients[0].deleteEdge(v2, v1);
-                                //close connection
+                                TTransport transport = connectToServerId(server2);
+                                Operations.Client client = makeInterface(transport);
+                                boolean p = client.deleteEdge(v2, v1);
+                                disconnectToServer(transport);
+                                return p;
                             } catch (Exception e) {
-                                System.out.println(e.getCause());
+                                e.printStackTrace();
                                 //throw
                             }
                         } else {
@@ -238,12 +298,13 @@ public class GraphHandler implements Operations.Iface {
         int server = processRequest(nomeUp);
         if (server != selfId) {
             try {
-                connectToServerId(server);
-                boolean p = clients[0].updateVertex(nomeUp, V);
-                disconnectToServer();
+                TTransport transport = connectToServerId(server);
+                Operations.Client client = makeInterface(transport);
+                boolean p = client.updateVertex(nomeUp, V);
+                disconnectToServer(transport);
                 return p;
             } catch (Exception e) {
-                System.out.println(e.getCause());
+                e.printStackTrace();
                 //throw
             }
         }
@@ -331,12 +392,13 @@ public class GraphHandler implements Operations.Iface {
         int server = processRequest(nome);
         if (server != selfId) {
             try {
-                connectToServerId(server);
-                Vertex p = clients[0].getVertex(nome);
-                disconnectToServer();
+                TTransport transport = connectToServerId(server);
+                Operations.Client client = makeInterface(transport);
+                Vertex p = client.getVertex(nome);
+                disconnectToServer(transport);
                 return p;
             } catch (Exception e) {
-                System.out.println(e.getCause());
+                e.printStackTrace();
                 //throw
             }
         }
@@ -357,12 +419,13 @@ public class GraphHandler implements Operations.Iface {
         int server = processRequest(v1);
         if (server != selfId) {
             try {
-                connectToServerId(server);
-                Edge p = clients[0].getEdge(v1, v2);
-                disconnectToServer();
+                TTransport transport = connectToServerId(server);
+                Operations.Client client = makeInterface(transport);
+                Edge p = client.getEdge(v1, v2);
+                disconnectToServer(transport);
                 return p;
             } catch (Exception e) {
-                System.out.println(e.getCause());
+                e.printStackTrace();
                 //throw
             }
         }
