@@ -1,16 +1,21 @@
 package br.ufu.miguelpereira.view;
 
-import br.ufu.miguelpereira.control.GraphHandler;
-import br.ufu.miguelpereira.thrift.*;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
 
-import org.apache.thrift.server.*;
+import org.apache.log4j.Logger;
+import org.apache.thrift.server.TServer;
+import org.apache.thrift.server.TThreadPoolServer;
 import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TServerTransport;
-
+import br.ufu.miguelpereira.control.GraphHandler;
+import br.ufu.miguelpereira.thrift.Operations;
 public class Server {
+	
+	private final static Logger logger = Logger.getLogger(Server.class);
 
     public static void main(String [] args){
-
         try{
             GraphHandler handler = new GraphHandler();
             Operations.Processor processor = new Operations.Processor(handler);
@@ -20,6 +25,7 @@ public class Server {
             server.serve();
         } catch (Exception x){
             x.printStackTrace();
+            logger.error(x.getMessage(), x);
         }
     }
 }

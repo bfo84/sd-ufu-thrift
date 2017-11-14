@@ -3,7 +3,7 @@ package br.ufu.miguelpereira.hash;
 import java.util.HashMap;
 import java.util.Map;
 
-import br.ufu.miguelpereira.hash.MD5;
+
 import io.netty.util.internal.StringUtil;
 
 public class TableServer {
@@ -22,9 +22,7 @@ public class TableServer {
 			
 			for (int i = 0; i < Integer.valueOf(numberServers); i++) {
 				Integer portServer = Integer.valueOf(port) + i;
-				String hash = MD5.hash(portServer.toString());
-				maptHashServer.put(portServer.toString(), hash);
-				
+				maptHashServer.put(Integer.toString(i),portServer.toString());
 			}
 		}		
 		
