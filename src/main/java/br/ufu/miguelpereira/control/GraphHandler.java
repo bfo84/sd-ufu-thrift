@@ -47,19 +47,19 @@ public class GraphHandler implements Operations.Iface {
     }
 
     public TTransport connectToServerId(int id) {
-        try{
+        try {
             int port = Integer.valueOf(ports.get(Integer.toString(id)));
             TTransport transport = new TSocket("localhost", port);
             transport.open();
             System.out.println("Server " + selfPort + " connected to server " + port);
             return transport;
-        }catch(TTransportException e){
+        } catch (TTransportException e) {
             e.printStackTrace();
         }
         return null;
     }
 
-    public Operations.Client makeInterface(TTransport transport){
+    public Operations.Client makeInterface(TTransport transport) {
         TBinaryProtocol protocol = new TBinaryProtocol(transport);
         Operations.Client client = new Operations.Client(protocol);
         return client;
@@ -146,10 +146,44 @@ public class GraphHandler implements Operations.Iface {
 
     @Override
     public boolean createEdge(int v1, int v2, double peso, int flag, String descricao) {
-        int criaControl = 0;
+        int criaControl = 0; //Contador de quantos vertices existem
+
+        int server = processRequest(v1);
+        if (server != selfId) {
+            try {
+                TTransport transport = connectToServerId(server);
+                Operations.Client client = makeInterface(transport);
+                boolean p = client.createEdge(v1, v2, peso, flag, descricao);
+                disconnectToServer(transport);
+                return p;
+            } catch (Exception e) {
+                e.printStackTrace();
+                //throw
+            }
+        }
         synchronized (G.getV()) { //Lock nos vertex caso haja delecao em um dos vertex da edge
             for (Vertex v : G.getV()) {
                 if (v.getNome() == v1 || v.getNome() == v2) {
+                    criaControl++;
+                }
+            }
+            if (criaControl == 1) {
+                Vertex v = null;
+                int server2 = processRequest(v2);
+                if (server2 != selfId) {
+                    try {
+                        TTransport transport = connectToServerId(server2);
+                        Operations.Client client = makeInterface(transport);
+                        v = client.getVertex(v2);
+                        disconnectToServer(transport);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        //throw
+                    }
+                }
+                if (v == null) {
+                    return false;
+                } else {
                     criaControl++;
                 }
             }
@@ -157,8 +191,22 @@ public class GraphHandler implements Operations.Iface {
                 Edge aux2 = new Edge(v1, v2, peso, flag, descricao);
                 synchronized (G.getA()) { //Lock nas edges para evitar duplicidade
                     if (!ifEquals(aux2)) {
-                        G.getA().add(aux2);
                         if (flag == 2) {
+                            int server3 = processRequest(v1);
+                            if (server3 != selfId) {
+                                try {
+                                    TTransport transport = connectToServerId(server3);
+                                    Operations.Client client = makeInterface(transport);
+                                    boolean p = client.createEdge(v2, v1, peso, flag, descricao);
+                                    disconnectToServer(transport);
+                                    if(!p) return p;
+                                    G.getA().add(aux2);
+                                    return p;
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                    //throw
+                                }
+                            }
                             Edge aux = new Edge(v2, v1, peso, flag, descricao);
                             if (!ifEquals(aux)) { //Se nao existir, cria
                                 G.getA().add(aux);
@@ -166,8 +214,11 @@ public class GraphHandler implements Operations.Iface {
                                 updateEdge(aux.getV1(), aux.getV2(), aux);
                             }
                         }
+                        G.getA().add(aux2);
                         return true;
                     }
+                    return true;
+
                 }
 
             }
@@ -206,7 +257,7 @@ public class GraphHandler implements Operations.Iface {
             try {
                 TTransport transport = connectToServerId(server);
                 Operations.Client client = makeInterface(transport);
-                boolean p = client.deleteEdge(v1,v2);
+                boolean p = client.deleteEdge(v1, v2);
                 disconnectToServer(transport);
                 return p;
             } catch (Exception e) {
@@ -224,7 +275,7 @@ public class GraphHandler implements Operations.Iface {
                             try {
                                 TTransport transport = connectToServerId(server2);
                                 Operations.Client client = makeInterface(transport);
-                                boolean p = client.deleteEdge(v2,v1);
+                                boolean p = client.deleteEdge(v2, v1);
                                 disconnectToServer(transport);
                                 return p;
                             } catch (Exception e) {
@@ -249,7 +300,7 @@ public class GraphHandler implements Operations.Iface {
             try {
                 TTransport transport = connectToServerId(server);
                 Operations.Client client = makeInterface(transport);
-                boolean p = client.updateVertex(nomeUp,V);
+                boolean p = client.updateVertex(nomeUp, V);
                 disconnectToServer(transport);
                 return p;
             } catch (Exception e) {
@@ -370,7 +421,7 @@ public class GraphHandler implements Operations.Iface {
             try {
                 TTransport transport = connectToServerId(server);
                 Operations.Client client = makeInterface(transport);
-                Edge p = client.getEdge(v1,v2);
+                Edge p = client.getEdge(v1, v2);
                 disconnectToServer(transport);
                 return p;
             } catch (Exception e) {
