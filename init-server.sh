@@ -11,8 +11,10 @@ id=0
 while [ $id -lt $N ]; do
 	echo Running java GraphServer $N $id $firstPort >> logs/log.txt
 	filename="logServer"$id".txt"
+	serverPort=$((firstPort+id))
 	filePath=logs/$filename
-	mvn exec:java -Dexec.mainClass=br.ufu.miguelpereira.view.Server -Dexec.args="$N $id $firstPort" > $filePath &
+	mvn exec:java -Dexec.mainClass=br.ufu.miguelpereira.view.Server -Dexec.args="$N $id $serverPort)"  > $filePath &
+	echo "Server: "$id" port" $serverPort
 	((id++))
 done
 

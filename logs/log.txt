@@ -1,12 +1,12 @@
-Server initial port 9001
-Running java GraphServer 5 0 9001
-Running java GraphServer 5 1 9001
-Running java GraphServer 5 2 9001
-Running java GraphServer 5 3 9001
-Running java GraphServer 5 4 9001
+Server initial port 9100
+Running java GraphServer 5 0 9100
+Running java GraphServer 5 1 9100
+Running java GraphServer 5 2 9100
+Running java GraphServer 5 3 9100
+Running java GraphServer 5 4 9100
 Opened ports: 
------ 9001
------ 9002
------ 9003
------ 9004
------ 9005
+----- 9100
+----- 9101
+----- 9102
+----- 9103
+----- 9104
