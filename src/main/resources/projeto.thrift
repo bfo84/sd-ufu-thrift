@@ -42,5 +42,5 @@ service Operations {
     list<Vertex> showVertexOfEdges(1:i32 v1,2:i32 v2),
     list<Edge> showEdgesOfVertex(1:i32 nomeV),
     list<Vertex> showAdjacency(1:i32 nomeV),
-    list<Edge> smallerPath(1:i32 v1,2:i32 v2)
+    list<Vertex> smallerPath(1:i32 v1,2:i32 v2)
 }

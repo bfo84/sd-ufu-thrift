@@ -10,6 +10,7 @@ import java.io.FileInputStream;
 import java.io.ObjectInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -567,9 +568,27 @@ public class GraphHandler implements Operations.Iface {
         return adjacentes;
     }
 
-    @Override
-    public List<Edge> smallerPath(int nomeV1, int nomeV2) {
+    private Vertex findVertice(Graph grafo, int vertice){
+        for(Vertex v: grafo.getV()){
+            if(v.nome == vertice){
+                return v;
+            }
+        }
         return null;
     }
-    //TODO Adicinar algoritmo de menor caminho
+
+    @Override
+    public List<Vertex> smallerPath(int nomeV1, int nomeV2) {
+
+        Graph fullGraph = showGraph();
+
+        Vertex v = findVertice(fullGraph, nomeV1);
+        Vertex destino = findVertice(fullGraph, nomeV2);
+
+        Dijkstra algoritmo = new Dijkstra(fullGraph);
+
+        algoritmo.executa(v);
+
+        return algoritmo.getCaminho(destino);
+    }
 }
