@@ -477,24 +477,21 @@ public class GraphHandler implements Operations.Iface {
     }
 
     @Override
-    public Graph showGraph() {
+    public Graph showGraph() throws TTransportException {
         int server;
-        int port;
+        TTransport []transports = connectToServers();
+        Operations.Client []clients = makeInterfaces(transports);
         Graph graphLocal = new Graph(new ArrayList<Vertex>(), new ArrayList<Edge>());
         ArrayList<Vertex> listOfVertex;
         ArrayList<Edge> listOfEdge;
         for (Map.Entry<String, String> entry: ports.entrySet()) {
             server = Integer.parseInt(entry.getValue());
-            port = Integer.parseInt(entry.getKey());
             if (server != selfId) {
                 try {
-                    TTransport transport = connectToServerId(port);
-                    Operations.Client client = makeInterface(transport);
-                    listOfVertex = (ArrayList<Vertex>) client.showVertex();
-                    listOfEdge = (ArrayList<Edge>) client.showEdge();
+                    listOfVertex = (ArrayList<Vertex>) clients[server].showVertex();
+                    listOfEdge = (ArrayList<Edge>) clients[server].showEdge();
                     graphLocal.V.addAll(listOfVertex);
                     graphLocal.A.addAll(listOfEdge);
-                    disconnectToServer(transport);
                 } catch (Exception e) {
                     e.printStackTrace();
                     //throw
