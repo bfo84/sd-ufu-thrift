@@ -579,9 +579,13 @@ public class GraphHandler implements Operations.Iface {
 
     @Override
     public List<Vertex> smallerPath(int nomeV1, int nomeV2) {
-
-        Graph fullGraph = showGraph();
-
+        Graph fullGraph = null;
+        try {
+             fullGraph= showGraph();
+        }catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
         Vertex v = findVertice(fullGraph, nomeV1);
         Vertex destino = findVertice(fullGraph, nomeV2);
 
