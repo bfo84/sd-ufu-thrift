@@ -47,6 +47,41 @@ public class GraphHandler implements Operations.Iface {
         clients = new Operations.Client[1];
     }
 
+    public TTransport[] connectToServers() throws TTransportException {
+        TTransport []listOfTransports = new TTransport[N];
+        int cont = 0;
+
+        try {
+            for (Map.Entry<String, String> entry: ports.entrySet()) {
+                listOfTransports[cont] = new TSocket("localhost", Integer.parseInt(entry.getKey()));
+                listOfTransports[cont].open();
+                cont++;
+            }
+        } catch (TTransportException e) {
+            System.out.print(e);
+        }
+
+        return listOfTransports;
+    }
+
+    public Operations.Client[] makeInterfaces(TTransport []transports) {
+        Operations.Client []clients = new Operations.Client[N];
+        TProtocol []listOfProtocols = new TProtocol[N];
+        int cont = 0;
+        for (TTransport transport: transports) {
+            listOfProtocols[cont] = new TBinaryProtocol(transport);
+            clients[cont] = new Operations.Client(listOfProtocols[cont]);
+            cont++;
+        }
+        return clients;
+    }
+
+    public void disconnectServers(TTransport []transports) {
+        for (TTransport transport: transports) {
+            transport.close();
+        }
+    }
+
     public TTransport connectToServerId(int id) {
         try {
             int port = Integer.valueOf(ports.get(Integer.toString(id)));

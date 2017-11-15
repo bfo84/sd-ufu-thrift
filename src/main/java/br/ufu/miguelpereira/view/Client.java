@@ -69,11 +69,7 @@ public class Client {
                         System.out.println("Peso <double>: ");
                         peso = scan.nextDouble();
                         if (client.createVertex(v1, cor, descricao, peso)) {
-                            ArrayList<Vertex> listOfVertex = (ArrayList<Vertex>) client.showVertex();
                             System.out.println("<- Vertice inserido! ->");
-                            for (Vertex v: listOfVertex) {
-                                System.out.println(v.nome);
-                            }
                         } else {
                             System.out.println("<- Erro! ->");
                         }
@@ -95,11 +91,7 @@ public class Client {
                         System.out.println("Digite o peso: ");
                         peso = scan.nextDouble();
                         if (client.createEdge(v1, v2, peso, cor, descricao)) {
-                            ArrayList<Edge> edgesofGraph = (ArrayList<Edge>) client.showEdge();
                             System.out.println("<- Aresta Inserida! ->");
-                            for (Edge e: edgesofGraph) {
-                                System.out.println("Aresta (" + e.v1 + "," + e.v2 + ")");
-                            }
                         } else {
                             System.out.println("<- Erro! ->");
                         }
@@ -147,7 +139,6 @@ public class Client {
                         v1 = scan.nextInt();
                         if (client.deleteVertex(v1)) {
                             System.out.println("<- Vértice Removido! ->");
-                            System.out.println(client.showGraph());
                         } else {
                             System.out.println("<- Erro! ->");
                         }
@@ -161,7 +152,6 @@ public class Client {
                         v2 = scan.nextInt();
                         if (client.deleteEdge(v1, v2)) {
                             System.out.println("<- Aresta removida! ->");
-                            System.out.println(client.showEdge());
                         } else {
                             System.out.println("<- Erro! ->");
                         }
@@ -181,7 +171,6 @@ public class Client {
                         peso = scan.nextDouble();
                         if (client.updateVertex(v1, new Vertex(v2, cor, descricao, peso))) {
                             System.out.println("<- Vertice Alterado! ->");
-                            System.out.println(client.showVertex());
                         } else {
                             System.out.println("<- Erro! ->");
                         }
@@ -203,7 +192,6 @@ public class Client {
                         cor = scan.nextInt(); //cor sendo utilizado pra peso
                         if (client.updateEdge(v1, v2, new Edge(v1, v2, peso, cor, descricao))) {//cor é peso
                             System.out.println("<- Aresta Alterada! ->");
-                            System.out.println(client.showEdge());
                         } else {
                             System.out.println("<- Erro! ->");
                         }
