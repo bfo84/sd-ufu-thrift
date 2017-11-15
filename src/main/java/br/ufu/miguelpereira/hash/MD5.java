@@ -15,7 +15,7 @@ public class MD5 {
 		
 	}
 	
-	/**
+	/*
 	 * Metodo responsavel por realizar o hash de cada string
 	 * @param word
 	 * @return
