@@ -407,7 +407,7 @@ public class GraphHandler implements Operations.Iface {
                                 boolean p = client.updateEdge(nomeV2, nomeV1, A);
                                 disconnectToServer(transport);
                             } catch (Exception e) {
-                                e.printStrackTrace();
+                                e.printStackTrace();
                             }
                         } else {
                             Edge b = getEdge(a.getV2(), a.getV1());
@@ -426,12 +426,12 @@ public class GraphHandler implements Operations.Iface {
                             int server3 = processRequest(nomeV2);
                             if (server3 != selfId) {
                                 try {
-                                    TTransport transport = connectToServerId(server2);
+                                    TTransport transport = connectToServerId(server3);
                                     Operations.Client client = makeInterface(transport);
                                     boolean p = client.createEdge(A.getV2(), A.getV1(), A.getPeso(), A.getFlag(), A.getDescricao());
                                     disconnectToServer(transport);
                                 } catch (Exception e) {
-                                    e.printStrackTrace();
+                                    e.printStackTrace();
                                 }
                             }
                             Edge aux = new Edge(A.getV2(), A.getV1(), A.getPeso(), A.getFlag(), A.getDescricao());
