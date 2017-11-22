@@ -35,6 +35,7 @@ public class GraphHandler implements Operations.Iface {
     private int selfId;
 
     public void GraphHandler(String[] args) {
+        System.out.print(args[0]);
         ports = TableServer.getMapServers(args[0], args[2]);
 
         N = Integer.parseInt(args[0]);
@@ -154,6 +155,7 @@ public class GraphHandler implements Operations.Iface {
 
     @Override
     public boolean createVertex(int nome, int cor, String descricao, double peso) {
+        System.out.print(N);
         int server = processRequest(nome);
         if (server != selfId) {
             try {

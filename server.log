@@ -349,3 +349,60 @@ Caused by: java.net.BindException: Address already in use (Bind failed)
 	at java.net.ServerSocket.bind(ServerSocket.java:375)
 	at org.apache.thrift.transport.TServerSocket.<init>(TServerSocket.java:106)
 	... 10 more
+14-11-2017 23:47:58 DEBUG Client:41 - Inicializando o menu
+14-11-2017 23:59:28 ERROR Client:242 - 
+org.apache.thrift.transport.TTransportException
+	at org.apache.thrift.transport.TIOStreamTransport.read(TIOStreamTransport.java:132)
+	at org.apache.thrift.transport.TTransport.readAll(TTransport.java:86)
+	at org.apache.thrift.protocol.TBinaryProtocol.readAll(TBinaryProtocol.java:424)
+	at org.apache.thrift.protocol.TBinaryProtocol.readI32(TBinaryProtocol.java:321)
+	at org.apache.thrift.protocol.TBinaryProtocol.readMessageBegin(TBinaryProtocol.java:225)
+	at org.apache.thrift.TServiceClient.receiveBase(TServiceClient.java:77)
+	at br.ufu.miguelpereira.thrift.Operations$Client.recv_createVertex(Operations.java:172)
+	at br.ufu.miguelpereira.thrift.Operations$Client.createVertex(Operations.java:156)
+	at br.ufu.miguelpereira.view.Client.main(Client.java:71)
+15-11-2017 00:04:04 ERROR Client:242 - java.net.ConnectException: Conexão recusada (Connection refused)
+org.apache.thrift.transport.TTransportException: java.net.ConnectException: Conexão recusada (Connection refused)
+	at org.apache.thrift.transport.TSocket.open(TSocket.java:226)
+	at br.ufu.miguelpereira.view.Client.main(Client.java:30)
+Caused by: java.net.ConnectException: Conexão recusada (Connection refused)
+	at java.net.PlainSocketImpl.socketConnect(Native Method)
+	at java.net.AbstractPlainSocketImpl.doConnect(AbstractPlainSocketImpl.java:350)
+	at java.net.AbstractPlainSocketImpl.connectToAddress(AbstractPlainSocketImpl.java:206)
+	at java.net.AbstractPlainSocketImpl.connect(AbstractPlainSocketImpl.java:188)
+	at java.net.SocksSocketImpl.connect(SocksSocketImpl.java:392)
+	at java.net.Socket.connect(Socket.java:589)
+	at org.apache.thrift.transport.TSocket.open(TSocket.java:221)
+	... 1 more
+15-11-2017 00:04:24 DEBUG Client:41 - Inicializando o menu
+15-11-2017 00:07:40 ERROR Client:242 - 
+org.apache.thrift.transport.TTransportException
+	at org.apache.thrift.transport.TIOStreamTransport.read(TIOStreamTransport.java:132)
+	at org.apache.thrift.transport.TTransport.readAll(TTransport.java:86)
+	at org.apache.thrift.protocol.TBinaryProtocol.readAll(TBinaryProtocol.java:424)
+	at org.apache.thrift.protocol.TBinaryProtocol.readI32(TBinaryProtocol.java:321)
+	at org.apache.thrift.protocol.TBinaryProtocol.readMessageBegin(TBinaryProtocol.java:225)
+	at org.apache.thrift.TServiceClient.receiveBase(TServiceClient.java:77)
+	at br.ufu.miguelpereira.thrift.Operations$Client.recv_createVertex(Operations.java:172)
+	at br.ufu.miguelpereira.thrift.Operations$Client.createVertex(Operations.java:156)
+	at br.ufu.miguelpereira.view.Client.main(Client.java:71)
+15-11-2017 00:07:57 DEBUG Client:41 - Inicializando o menu
+15-11-2017 00:59:10 ERROR Client:242 - 
+java.util.NoSuchElementException
+	at java.util.Scanner.throwFor(Scanner.java:862)
+	at java.util.Scanner.next(Scanner.java:1485)
+	at java.util.Scanner.nextInt(Scanner.java:2117)
+	at java.util.Scanner.nextInt(Scanner.java:2076)
+	at br.ufu.miguelpereira.view.Client.main(Client.java:57)
+15-11-2017 01:03:42 DEBUG Client:41 - Inicializando o menu
+15-11-2017 01:05:42 DEBUG Client:41 - Inicializando o menu
+15-11-2017 01:05:47 ERROR Client:242 - 
+java.util.NoSuchElementException
+	at java.util.Scanner.throwFor(Scanner.java:862)
+	at java.util.Scanner.next(Scanner.java:1485)
+	at java.util.Scanner.nextInt(Scanner.java:2117)
+	at java.util.Scanner.nextInt(Scanner.java:2076)
+	at br.ufu.miguelpereira.view.Client.main(Client.java:57)
+15-11-2017 01:06:35 ERROR Server:28 - 2
+java.lang.ArrayIndexOutOfBoundsException: 2
+	at br.ufu.miguelpereira.view.Server.main(Server.java:22)
