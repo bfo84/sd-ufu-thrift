@@ -22,54 +22,54 @@ import org.apache.thrift.transport.TTransportException;
 
 public class GraphHandler implements Operations.Iface {
 
-    //private ArrayList<Graph> Graphs = new ArrayList<Graph>();
-    private Graph G = new Graph(new ArrayList<Vertex>(), new ArrayList<Edge>());
+    private static final String LOCALHOST = "localhost";
+	//private ArrayList<Graph> Graphs = new ArrayList<Graph>();
+    private Graph graph = new Graph(new ArrayList<Vertex>(), new ArrayList<Edge>());
     private Object fileLock = new Object();
-    private static Map<String, String> ports;
+    private static Map<String, String> serversPort;
 
     private TTransport[] transports;
     private TProtocol[] protocols;
     private Operations.Client[] clients;
-    private int selfPort; // number of the port of this server
-    private static int N; // number of servers
-    private int selfId;
+    private int serverPort; // number of the port of this server
+    private int NUMBER_SERVERS; // number of servers
+    private int serverId;
 
     public void GraphHandler(String[] args) {
-        System.out.print(args[0]);
-        ports = TableServer.getMapServers(args[0], args[2]);
+        serversPort = TableServer.getMapServers(args[0], args[2]);
 
-        N = Integer.parseInt(args[0]);
-        selfId = Integer.parseInt(args[1]);
+        NUMBER_SERVERS = Integer.parseInt(args[0]);
+        serverId = Integer.parseInt(args[1]);
         int firstPort = Integer.parseInt(args[2]);
-        selfPort = firstPort + selfId;
+        serverPort = firstPort + serverId;
 
         transports = new TTransport[1];
         protocols = new TProtocol[1];
         clients = new Operations.Client[1];
     }
 
-    public TTransport[] connectToServers() throws TTransportException {
-        TTransport []listOfTransports = new TTransport[N];
-        int cont = 0;
+    public TTransport[] startServers() throws TTransportException {
+        TTransport[] listOfServers = new TTransport[NUMBER_SERVERS];
+        int counter = 0;
 
         try {
-            for (Map.Entry<String, String> entry: ports.entrySet()) {
-                listOfTransports[cont] = new TSocket("localhost", Integer.parseInt(entry.getKey()));
-                listOfTransports[cont].open();
-                cont++;
+            for (Map.Entry<String, String> entry : serversPort.entrySet()) {
+                listOfServers[counter] = new TSocket(LOCALHOST, Integer.parseInt(entry.getKey()));
+                listOfServers[counter].open();
+                counter++;
             }
         } catch (TTransportException e) {
             System.out.print(e);
         }
 
-        return listOfTransports;
+        return listOfServers;
     }
 
-    public Operations.Client[] makeInterfaces(TTransport []transports) {
-        Operations.Client []clients = new Operations.Client[N];
-        TProtocol []listOfProtocols = new TProtocol[N];
+    public Operations.Client[] createClients(TTransport[] transports) {
+        Operations.Client[] clients = new Operations.Client[NUMBER_SERVERS];
+        TProtocol[] listOfProtocols = new TProtocol[NUMBER_SERVERS];
         int cont = 0;
-        for (TTransport transport: transports) {
+        for (TTransport transport : transports) {
             listOfProtocols[cont] = new TBinaryProtocol(transport);
             clients[cont] = new Operations.Client(listOfProtocols[cont]);
             cont++;
@@ -77,18 +77,18 @@ public class GraphHandler implements Operations.Iface {
         return clients;
     }
 
-    public void disconnectServers(TTransport []transports) {
-        for (TTransport transport: transports) {
+    public void disconnectServers(TTransport[] transports) {
+        for (TTransport transport : transports) {
             transport.close();
         }
     }
 
     public TTransport connectToServerId(int id) {
         try {
-            int port = Integer.valueOf(ports.get(Integer.toString(id)));
-            TTransport transport = new TSocket("localhost", port);
+            int port = Integer.valueOf(serversPort.get(Integer.toString(id)));
+            TTransport transport = new TSocket(LOCALHOST, port);
             transport.open();
-            System.out.println("Server " + selfPort + " connected to server " + port);
+            System.out.println("Server " + serverPort + " connected to server " + port);
             return transport;
         } catch (TTransportException e) {
             e.printStackTrace();
@@ -96,15 +96,15 @@ public class GraphHandler implements Operations.Iface {
         return null;
     }
 
-    public Operations.Client makeInterface(TTransport transport) {
+    public Operations.Client createClientRequest(TTransport transport) {
         TBinaryProtocol protocol = new TBinaryProtocol(transport);
         Operations.Client client = new Operations.Client(protocol);
         return client;
     }
 
-    public void disconnectToServer(TTransport transport) {
+    public void disconnectServer(TTransport transport) {
         transport.close();
-        System.out.println("Connection from " + selfPort + " closed");
+        System.out.println("Connection from " + serverPort + " closed");
     }
 
     @Override
@@ -117,8 +117,8 @@ public class GraphHandler implements Operations.Iface {
 
                 aux = stream.readObject();
                 if (aux != null) {
-                    synchronized (G) {
-                        G = (Graph) aux;
+                    synchronized (graph) {
+                        graph = (Graph) aux;
                     }
                 }
                 stream.close();
@@ -134,8 +134,8 @@ public class GraphHandler implements Operations.Iface {
             try {
                 FileOutputStream saveFile = new FileOutputStream(caminho);
                 ObjectOutputStream stream = new ObjectOutputStream(saveFile);
-                synchronized (G) {
-                    stream.writeObject(G);
+                synchronized (graph) {
+                    stream.writeObject(graph);
                 }
                 stream.close();
             } catch (IOException exc) {
@@ -144,9 +144,9 @@ public class GraphHandler implements Operations.Iface {
         }
     }
 
-    private int processRequest(int vertice) {
+    private int getServerId(int vertice) {
         try {
-            return MD5.md5(String.format("%d", vertice), String.format("%d", N));
+            return MD5.getGenerateServerId(String.format("%d", vertice), String.format("%d", NUMBER_SERVERS));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -155,90 +155,89 @@ public class GraphHandler implements Operations.Iface {
 
     @Override
     public boolean createVertex(int nome, int cor, String descricao, double peso) {
-        System.out.print(N);
-        int server = processRequest(nome);
-        if (server != selfId) {
+        int server = getServerId(nome);
+        if (server != serverId) {
             try {
                 TTransport transport = connectToServerId(server);
-                Operations.Client client = makeInterface(transport);
+                Operations.Client client = createClientRequest(transport);
                 boolean p = client.createVertex(nome, cor, descricao, peso);
-                disconnectToServer(transport);
+                disconnectServer(transport);
                 return p;
             } catch (Exception e) {
                 e.printStackTrace();
                 //throw
             }
         }
-        synchronized (G.getV()) { //Lock na lista para evitar duplicidade de nome
-            if (G.getV() != null) {
-                for (Vertex v : G.getV()) {
-                    if (v.getNome() == nome) {
+        synchronized (graph.getV()) { //Lock na lista para evitar duplicidade de nome
+            if (graph.getV() != null) {
+                for (Vertex vertex : graph.getV()) {
+                    if (vertex.getNome() == nome) {
                         return false;
                     }
                 }
             }
-            G.getV().add(new Vertex(nome, cor, descricao, peso));
+            graph.getV().add(new Vertex(nome, cor, descricao, peso));
         }
         return true;
     }
 
     @Override
     public boolean createEdge(int v1, int v2, double peso, int flag, String descricao) {
-        int criaControl = 0; //Contador de quantos vertices existem
+        int vertexCounter = 0; //Contador de quantos vertices existem
 
-        int server = processRequest(v1);
-        if (server != selfId) {
+        int server = getServerId(v1);
+        if (server != serverId) {
             try {
                 TTransport transport = connectToServerId(server);
-                Operations.Client client = makeInterface(transport);
+                Operations.Client client = createClientRequest(transport);
                 boolean p = client.createEdge(v1, v2, peso, flag, descricao);
-                disconnectToServer(transport);
+                disconnectServer(transport);
                 return p;
             } catch (Exception e) {
                 e.printStackTrace();
                 //throw
             }
         }
-        synchronized (G.getV()) { //Lock nos vertex caso haja delecao em um dos vertex da edge
-            for (Vertex v : G.getV()) {
-                if (v.getNome() == v1 || v.getNome() == v2) {
-                    criaControl++;
+        synchronized (graph.getV()) { //Lock nos vertex caso haja delecao em um dos vertex da edge
+            for (Vertex vertex : graph.getV()) {
+                if (vertex.getNome() == v1 || vertex.getNome() == v2) {
+                    vertexCounter++;
                 }
             }
-            if (criaControl == 1) {
-                Vertex v = null;
-                int server2 = processRequest(v2);
-                if (server2 != selfId) {
+            if (vertexCounter == 1) {
+                Vertex vertex = null;
+                int server2 = getServerId(v2);
+                if (server2 != serverId) {
                     try {
                         TTransport transport = connectToServerId(server2);
-                        Operations.Client client = makeInterface(transport);
-                        v = client.getVertex(v2);
-                        disconnectToServer(transport);
+                        Operations.Client client = createClientRequest(transport);
+                        vertex = client.getVertex(v2);
+                        disconnectServer(transport);
                     } catch (Exception e) {
                         e.printStackTrace();
                         //throw
                     }
                 }
-                if (v == null) {
+                if (vertex == null) {
                     return false;
                 } else {
-                    criaControl++;
+                    vertexCounter++;
                 }
             }
-            if (criaControl > 1) {
+            if (vertexCounter > 1) {
                 Edge aux2 = new Edge(v1, v2, peso, flag, descricao);
-                synchronized (G.getA()) { //Lock nas edges para evitar duplicidade
+                synchronized (graph.getA()) { //Lock nas edges para evitar duplicidade
                     if (!ifEquals(aux2)) {
                         if (flag == 2) {
-                            int server3 = processRequest(v1);
-                            if (server3 != selfId) {
+                            int server3 = getServerId(v1);
+                            if (server3 != serverId) {
                                 try {
                                     TTransport transport = connectToServerId(server3);
-                                    Operations.Client client = makeInterface(transport);
+                                    Operations.Client client = createClientRequest(transport);
                                     boolean p = client.createEdge(v2, v1, peso, flag, descricao);
-                                    disconnectToServer(transport);
-                                    if(!p) return p;
-                                    G.getA().add(aux2);
+                                    disconnectServer(transport);
+                                    if (!p) return p;
+                                    graph.getA().add(aux2);
                                     return p;
                                 } catch (Exception e) {
                                     e.printStackTrace();
@@ -247,12 +246,12 @@ public class GraphHandler implements Operations.Iface {
                             }
                             Edge aux = new Edge(v2, v1, peso, flag, descricao);
                             if (!ifEquals(aux)) { //Se nao existir, cria
-                                G.getA().add(aux);
+                                graph.getA().add(aux);
                             } else {//Se existir, atualiza
                                 updateEdge(aux.getV1(), aux.getV2(), aux);
                             }
                         }
-                        G.getA().add(aux2);
+                        graph.getA().add(aux2);
                         return true;
                     }
                     return true;
@@ -267,20 +266,20 @@ public class GraphHandler implements Operations.Iface {
     @Override
     public boolean deleteVertex(int nome) {
         ArrayList<Edge> forDeletion = new ArrayList<>();
-        synchronized (G.getA()) {
-            for (Edge a : G.getA()) {
+        synchronized (graph.getA()) {
+            for (Edge a : graph.getA()) {
                 if (a.getV1() == nome || a.getV2() == nome) {
                     forDeletion.add(a);
                 }
             }
             for (Edge a : forDeletion) {
-                G.getA().remove(a);
+                graph.getA().remove(a);
             }
         }
-        for (Vertex v : G.getV()) {
-            synchronized (v) {
-                if (v.getNome() == nome) {
-                    G.getV().remove(v);
+        for (Vertex vertex : graph.getV()) {
+            synchronized (vertex) {
+                if (vertex.getNome() == nome) {
+                    graph.getV().remove(vertex);
                     return true;
                 }
             }
@@ -290,31 +289,31 @@ public class GraphHandler implements Operations.Iface {
 
     @Override
     public boolean deleteEdge(int v1, int v2) {
-        int server = processRequest(v1);
-        if (server != selfId) {
+        int server = getServerId(v1);
+        if (server != serverId) {
             try {
                 TTransport transport = connectToServerId(server);
-                Operations.Client client = makeInterface(transport);
+                Operations.Client client = createClientRequest(transport);
                 boolean p = client.deleteEdge(v1, v2);
-                disconnectToServer(transport);
+                disconnectServer(transport);
                 return p;
             } catch (Exception e) {
                 e.printStackTrace();
                 //throw
             }
         }
-        for (Edge a : G.getA()) {
-            synchronized (a) {
-                if (a.getV1() == v1 && a.getV2() == v2) {
-                    G.getA().remove(a);
-                    if (a.getFlag() == 2) {
-                        int server2 = processRequest(v2);
-                        if (server2 != selfId) {
+        for (Edge edge : graph.getA()) {
+            synchronized (edge) {
+                if (edge.getV1() == v1 && edge.getV2() == v2) {
+                    graph.getA().remove(edge);
+                    if (edge.getFlag() == 2) {
+                        int server2 = getServerId(v2);
+                        if (server2 != serverId) {
                             try {
-                                TTransport transport = connectToServerId(server2);
-                                Operations.Client client = makeInterface(transport);
+                                TTransport startedServer = connectToServerId(server2);
+                                Operations.Client client = createClientRequest(startedServer);
                                 boolean p = client.deleteEdge(v2, v1);
-                                disconnectToServer(transport);
+                                disconnectServer(startedServer);
                                 return p;
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -333,13 +332,13 @@ public class GraphHandler implements Operations.Iface {
 
     @Override
     public boolean updateVertex(int nomeUp, Vertex V) {
-        int server = processRequest(nomeUp);
-        if (server != selfId) {
+        int server = getServerId(nomeUp);
+        if (server != serverId) {
             try {
-                TTransport transport = connectToServerId(server);
-                Operations.Client client = makeInterface(transport);
+                TTransport startedServer = connectToServerId(server);
+                Operations.Client client = createClientRequest(startedServer);
                 boolean p = client.updateVertex(nomeUp, V);
-                disconnectToServer(transport);
+                disconnectServer(startedServer);
                 return p;
             } catch (Exception e) {
                 e.printStackTrace();
@@ -352,7 +351,7 @@ public class GraphHandler implements Operations.Iface {
         if (nomeUp != V.getNome()) {
             return false;
         }
-        for (Vertex v : G.getV()) {
+        for (Vertex v : graph.getV()) {
             synchronized (v) {
                 if (v.getNome() == nomeUp) {
                     v.setCor(V.getCor());
@@ -366,9 +365,9 @@ public class GraphHandler implements Operations.Iface {
     }
 
     public boolean ifEquals(Edge A) {
-        synchronized (G.getA()) {
-            for (Edge a : G.getA()) {
-                if (a.getV1() == A.getV1() && a.getV2() == A.getV2()) {
+        synchronized (graph.getA()) {
+            for (Edge edge : graph.getA()) {
+                if (edge.getV1() == A.getV1() && edge.getV2() == A.getV2()) {
                     return true;
                 }
             }
@@ -377,38 +376,74 @@ public class GraphHandler implements Operations.Iface {
     }
 
     @Override
-    public boolean updateEdge(int nomeV1, int nomeV2, Edge A) {
-        if (A == null) {
+    public boolean updateEdge(int nomeV1, int nomeV2, Edge edge) {
+        int server = getServerId(nomeV1);
+        if (server != serverId) {
+            try {
+                TTransport startedServer = connectToServerId(server);
+                Operations.Client client = createClientRequest(startedServer);
+                boolean p = client.updateEdge(nomeV1, nomeV2, edge);
+                disconnectServer(startedServer);
+                return p;
+            } catch (Exception e) {
+                e.printStackTrace();
+                //throw
+            }
+        }
+        if (edge == null) {
             return false;
         }
-        if (nomeV1 != A.getV1() || nomeV2 != A.getV2()) {
+        if (nomeV1 != edge.getV1() || nomeV2 != edge.getV2()) {
             return false;
         }
-        for (Edge a : G.getA()) {
-            synchronized (a) {
-                if (a.getV1() == nomeV1 && a.getV2() == nomeV2) {
-                    if (a.getFlag() == 2) {// Se aresta antiga for bi-direcional, pega aresta v2,v1
-                        Edge b = getEdge(a.getV2(), a.getV1());
-                        synchronized (b) {
-                            if (A.getFlag() == 1) {// Se aresta nova for direcionada, remove aresta v2,v1
-                                G.getA().remove(b);
-                            } else { // Senao, update aresta v2,v1
-                                b.setPeso(A.getPeso());
-                                b.setFlag(A.getFlag());
-                                b.setDescricao(A.getDescricao());
+        for (Edge edgeGraph : graph.getA()) {
+            synchronized (edgeGraph) {
+                if (edgeGraph.getV1() == nomeV1 && edgeGraph.getV2() == nomeV2) {
+                    if (edgeGraph.getFlag() == 2) {// Se aresta antiga for bi-direcional, pega aresta v2,v1
+                        int server2 = getServerId(nomeV2);
+                        if (server2 != serverId) {
+                            try {
+                                TTransport startedServer = connectToServerId(server2);
+                                Operations.Client client = createClientRequest(startedServer);
+                                boolean p = client.updateEdge(nomeV2, nomeV1, edge);
+                                disconnectServer(startedServer);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        } else {
+                            Edge b = getEdge(edgeGraph.getV2(), edgeGraph.getV1());
+                            synchronized (b) {
+                                if (edge.getFlag() == 1) {// Se aresta nova for direcionada, remove aresta v2,v1
+                                    graph.getA().remove(b);
+                                } else { // Senao, update aresta v2,v1
+                                    b.setPeso(edge.getPeso());
+                                    b.setFlag(edge.getFlag());
+                                    b.setDescricao(edge.getDescricao());
+                                }
                             }
                         }
                     } else {// Se aresta antiga for direcionada
-                        if (A.getFlag() == 2) {// E aresta nova for bi-direcional, cria aresta v2,v1
-                            Edge aux = new Edge(A.getV2(), A.getV1(), A.getPeso(), A.getFlag(), A.getDescricao());
+                        if (edge.getFlag() == 2) {// E aresta nova for bi-direcional, cria aresta v2,v1
+                            int server3 = getServerId(nomeV2);
+                            if (server3 != serverId) {
+                                try {
+                                    TTransport startedServer = connectToServerId(server3);
+                                    Operations.Client client = createClientRequest(startedServer);
+                                    boolean p = client.createEdge(edge.getV2(), edge.getV1(), edge.getPeso(), edge.getFlag(), edge.getDescricao());
+                                    disconnectServer(startedServer);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            Edge aux = new Edge(edge.getV2(), edge.getV1(), edge.getPeso(), edge.getFlag(), edge.getDescricao());
                             if (!ifEquals(aux)) {
-                                G.getA().add(aux);
+                                graph.getA().add(aux);
                             }
                         }
                     }// Em todos os casos, update aresta v1,v2
-                    a.setPeso(A.getPeso());
-                    a.setFlag(A.getFlag());
-                    a.setDescricao(A.getDescricao());
+                    edgeGraph.setPeso(edge.getPeso());
+                    edgeGraph.setFlag(edge.getFlag());
+                    edgeGraph.setDescricao(edge.getDescricao());
                     return true;
                 }
             }
@@ -416,163 +451,163 @@ public class GraphHandler implements Operations.Iface {
         return false;
     }
 
-    @Override
-    public boolean updateGraph(java.util.List<Vertex> V, java.util.List<Edge> A) {
-        synchronized (G) {
-            G.setV(V);
-            G.setA(A);
-            return true;
+        @Override
+        public boolean updateGraph (java.util.List < Vertex > V, java.util.List < Edge > A){
+            synchronized (graph) {
+                graph.setV(V);
+                graph.setA(A);
+                return true;
+            }
         }
-    }
 
-    @Override
-    public Vertex getVertex(int nome) {
-        int server = processRequest(nome);
-        if (server != selfId) {
-            try {
-                TTransport transport = connectToServerId(server);
-                Operations.Client client = makeInterface(transport);
-                Vertex p = client.getVertex(nome);
-                disconnectToServer(transport);
-                return p;
-            } catch (Exception e) {
-                e.printStackTrace();
-                //throw
-            }
-        }
-        synchronized (G.getV()) {
-            if (!G.getV().isEmpty()) {
-                for (Vertex v : G.getV()) {
-                    if (v.getNome() == nome) {
-                        return v;
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public Edge getEdge(int v1, int v2) {
-        int server = processRequest(v1);
-        if (server != selfId) {
-            try {
-                TTransport transport = connectToServerId(server);
-                Operations.Client client = makeInterface(transport);
-                Edge p = client.getEdge(v1, v2);
-                disconnectToServer(transport);
-                return p;
-            } catch (Exception e) {
-                e.printStackTrace();
-                //throw
-            }
-        }
-        synchronized (G.getA()) {
-            if (!G.getA().isEmpty()) {
-                for (Edge a : G.getA()) {
-                    if (a.getV1() == v1 && a.getV2() == v2) {
-                        return a;
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public Graph showGraph() throws TTransportException {
-        int server;
-        TTransport []transports = connectToServers();
-        Operations.Client []clients = makeInterfaces(transports);
-        Graph graphLocal = new Graph(new ArrayList<Vertex>(), new ArrayList<Edge>());
-        ArrayList<Vertex> listOfVertex;
-        ArrayList<Edge> listOfEdge;
-        for (Map.Entry<String, String> entry: ports.entrySet()) {
-            server = Integer.parseInt(entry.getValue());
-            if (server != selfId) {
+        @Override
+        public Vertex getVertex ( int nome){
+            int server = getServerId(nome);
+            if (server != serverId) {
                 try {
-                    listOfVertex = (ArrayList<Vertex>) clients[server].showVertex();
-                    listOfEdge = (ArrayList<Edge>) clients[server].showEdge();
-                    graphLocal.V.addAll(listOfVertex);
-                    graphLocal.A.addAll(listOfEdge);
+                    TTransport startedServer = connectToServerId(server);
+                    Operations.Client client = createClientRequest(startedServer);
+                    Vertex vertex = client.getVertex(nome);
+                    disconnectServer(startedServer);
+                    return vertex;
                 } catch (Exception e) {
                     e.printStackTrace();
                     //throw
                 }
-            } else {
-                listOfEdge = (ArrayList<Edge>) showEdge();
-                listOfVertex = (ArrayList<Vertex>) showVertex();
-                graphLocal.V.addAll(listOfVertex);
-                graphLocal.A.addAll(listOfEdge);
             }
-        }
-        return graphLocal;
-    }
-
-    @Override
-    public List<Vertex> showVertex() {
-        ArrayList<Vertex> vertices = new ArrayList<>();
-        synchronized (G.getV()) {
-            for (Vertex v : G.getV()) {
-                vertices.add(v);
+            synchronized (graph.getV()) {
+                if (!graph.getV().isEmpty()) {
+                    for (Vertex v : graph.getV()) {
+                        if (v.getNome() == nome) {
+                            return v;
+                        }
+                    }
+                }
             }
+            return null;
         }
-        return vertices;
-    }
 
-    @Override
-    public List<Edge> showEdge() {
-        ArrayList<Edge> arestas = new ArrayList<>();
-        synchronized (G.getA()) {
-            for (Edge a : G.getA()) {
-                arestas.add(a);
+        @Override
+        public Edge getEdge ( int v1, int v2){
+            int server = getServerId(v1);
+            if (server != serverId) {
+                try {
+                    TTransport startedServer = connectToServerId(server);
+                    Operations.Client client = createClientRequest(startedServer);
+                    Edge edge = client.getEdge(v1, v2);
+                    disconnectServer(startedServer);
+                    return edge;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    //throw
+                }
             }
+            synchronized (graph.getA()) {
+                if (!graph.getA().isEmpty()) {
+                    for (Edge a : graph.getA()) {
+                        if (a.getV1() == v1 && a.getV2() == v2) {
+                            return a;
+                        }
+                    }
+                }
+            }
+            return null;
         }
-        return arestas;
-    }
 
-    @Override
-    public List<Vertex> showVertexOfEdges(int v1, int v2) {
-        ArrayList<Vertex> vertices = new ArrayList<>();
-        vertices.add(getVertex(v1));
-        vertices.add(getVertex(v2));
-        return vertices;
-    }
+        @Override
+        public Graph showGraph () throws TTransportException {
+            int server;
+            TTransport[] servers = startServers();
+            Operations.Client[] clients = createClients(servers);
+            Graph localGraph = new Graph(new ArrayList<Vertex>(), new ArrayList<Edge>());
+            ArrayList<Vertex> listOfVertex;
+            ArrayList<Edge> listOfEdge;
+            for (Map.Entry<String, String> entry : serversPort.entrySet()) {
+                server = Integer.parseInt(entry.getValue());
+                if (server != serverId) {
+                    try {
+                        listOfVertex = (ArrayList<Vertex>) clients[server].showVertex();
+                        listOfEdge = (ArrayList<Edge>) clients[server].showEdge();
+                        localGraph.V.addAll(listOfVertex);
+                        localGraph.A.addAll(listOfEdge);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        //throw
+                    }
+                } else {
+                    listOfEdge = (ArrayList<Edge>) showEdge();
+                    listOfVertex = (ArrayList<Vertex>) showVertex();
+                    localGraph.V.addAll(listOfVertex);
+                    localGraph.A.addAll(listOfEdge);
+                }
+            }
+            return localGraph;
+        }
 
-    @Override
-    public List<Edge> showEdgesOfVertex(int nomeV) {
-        ArrayList<Edge> arestas = new ArrayList<>();
-        synchronized (G.getA()) {
-            for (Edge a : G.getA()) {
-                if (a.getV1() == nomeV || a.getV2() == nomeV) {
+        @Override
+        public List<Vertex> showVertex () {
+            ArrayList<Vertex> vertices = new ArrayList<>();
+            synchronized (graph.getV()) {
+                for (Vertex v : graph.getV()) {
+                    vertices.add(v);
+                }
+            }
+            return vertices;
+        }
+
+        @Override
+        public List<Edge> showEdge () {
+            ArrayList<Edge> arestas = new ArrayList<>();
+            synchronized (graph.getA()) {
+                for (Edge a : graph.getA()) {
                     arestas.add(a);
                 }
             }
+            return arestas;
         }
-        return arestas;
-    }
 
-    @Override
-    public List<Vertex> showAdjacency(int nomeV) {
-        ArrayList<Vertex> adjacentes = new ArrayList<>();
-        synchronized (G.getA()) {
-            for (Edge a : G.getA()) {
-                if (a.getV1() == nomeV) {
-                    if (!adjacentes.contains(getVertex(a.getV2())))
-                        adjacentes.add(getVertex(a.getV2()));
+        @Override
+        public List<Vertex> showVertexOfEdges ( int v1, int v2){
+            ArrayList<Vertex> vertices = new ArrayList<>();
+            vertices.add(getVertex(v1));
+            vertices.add(getVertex(v2));
+            return vertices;
+        }
 
-                } else if (a.getV2() == nomeV) {
-                    if (!adjacentes.contains(getVertex(a.getV1())))
-                        adjacentes.add(getVertex(a.getV1()));
+        @Override
+        public List<Edge> showEdgesOfVertex ( int nomeV){
+            ArrayList<Edge> arestas = new ArrayList<>();
+            synchronized (graph.getA()) {
+                for (Edge a : graph.getA()) {
+                    if (a.getV1() == nomeV || a.getV2() == nomeV) {
+                        arestas.add(a);
+                    }
                 }
             }
+            return arestas;
         }
-        return adjacentes;
-    }
 
-    private Vertex findVertice(Graph grafo, int vertice){
-        for(Vertex v: grafo.getV()){
-            if(v.nome == vertice){
+        @Override
+        public List<Vertex> showAdjacency ( int nomeV){
+            ArrayList<Vertex> adjacentes = new ArrayList<>();
+            synchronized (graph.getA()) {
+                for (Edge a : graph.getA()) {
+                    if (a.getV1() == nomeV) {
+                        if (!adjacentes.contains(getVertex(a.getV2())))
+                            adjacentes.add(getVertex(a.getV2()));
+
+                    } else if (a.getV2() == nomeV) {
+                        if (!adjacentes.contains(getVertex(a.getV1())))
+                            adjacentes.add(getVertex(a.getV1()));
+                    }
+                }
+            }
+            return adjacentes;
+        }
+
+    private Vertex findVertice(Graph graph, int vertex) {
+        for (Vertex v : graph.getV()) {
+            if (v.nome == vertex) {
                 return v;
             }
         }
@@ -583,18 +618,18 @@ public class GraphHandler implements Operations.Iface {
     public List<Vertex> smallerPath(int nomeV1, int nomeV2) {
         Graph fullGraph = null;
         try {
-             fullGraph= showGraph();
-        }catch (Exception e){
+            fullGraph = showGraph();
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
-        Vertex v = findVertice(fullGraph, nomeV1);
-        Vertex destino = findVertice(fullGraph, nomeV2);
+        Vertex originVertex = findVertice(fullGraph, nomeV1);
+        Vertex destinationVertex = findVertice(fullGraph, nomeV2);
 
-        Dijkstra algoritmo = new Dijkstra(fullGraph);
+        Dijkstra algorithm = new Dijkstra(fullGraph);
 
-        algoritmo.executa(v);
+        algorithm.executa(originVertex);
 
-        return algoritmo.getCaminho(destino);
+        return algorithm.getCaminho(destinationVertex);
     }
 }

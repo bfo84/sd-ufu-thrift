@@ -406,3 +406,49 @@ java.util.NoSuchElementException
 15-11-2017 01:06:35 ERROR Server:28 - 2
 java.lang.ArrayIndexOutOfBoundsException: 2
 	at br.ufu.miguelpereira.view.Server.main(Server.java:22)
+22-11-2017 21:02:52 ERROR Client:242 - java.net.ConnectException: Conexão recusada (Connection refused)
+org.apache.thrift.transport.TTransportException: java.net.ConnectException: Conexão recusada (Connection refused)
+	at org.apache.thrift.transport.TSocket.open(TSocket.java:226)
+	at br.ufu.miguelpereira.view.Client.main(Client.java:30)
+Caused by: java.net.ConnectException: Conexão recusada (Connection refused)
+	at java.net.PlainSocketImpl.socketConnect(Native Method)
+	at java.net.AbstractPlainSocketImpl.doConnect(AbstractPlainSocketImpl.java:350)
+	at java.net.AbstractPlainSocketImpl.connectToAddress(AbstractPlainSocketImpl.java:206)
+	at java.net.AbstractPlainSocketImpl.connect(AbstractPlainSocketImpl.java:188)
+	at java.net.SocksSocketImpl.connect(SocksSocketImpl.java:392)
+	at java.net.Socket.connect(Socket.java:589)
+	at org.apache.thrift.transport.TSocket.open(TSocket.java:221)
+	... 1 more
+22-11-2017 21:03:55 ERROR Client:242 - java.net.ConnectException: Conexão recusada (Connection refused)
+org.apache.thrift.transport.TTransportException: java.net.ConnectException: Conexão recusada (Connection refused)
+	at org.apache.thrift.transport.TSocket.open(TSocket.java:226)
+	at br.ufu.miguelpereira.view.Client.main(Client.java:30)
+Caused by: java.net.ConnectException: Conexão recusada (Connection refused)
+	at java.net.PlainSocketImpl.socketConnect(Native Method)
+	at java.net.AbstractPlainSocketImpl.doConnect(AbstractPlainSocketImpl.java:350)
+	at java.net.AbstractPlainSocketImpl.connectToAddress(AbstractPlainSocketImpl.java:206)
+	at java.net.AbstractPlainSocketImpl.connect(AbstractPlainSocketImpl.java:188)
+	at java.net.SocksSocketImpl.connect(SocksSocketImpl.java:392)
+	at java.net.Socket.connect(Socket.java:589)
+	at org.apache.thrift.transport.TSocket.open(TSocket.java:221)
+	... 1 more
+22-11-2017 21:07:03 DEBUG Client:41 - Inicializando o menu
+22-11-2017 21:07:29 ERROR Client:242 - 
+org.apache.thrift.transport.TTransportException
+	at org.apache.thrift.transport.TIOStreamTransport.read(TIOStreamTransport.java:132)
+	at org.apache.thrift.transport.TTransport.readAll(TTransport.java:86)
+	at org.apache.thrift.protocol.TBinaryProtocol.readAll(TBinaryProtocol.java:424)
+	at org.apache.thrift.protocol.TBinaryProtocol.readI32(TBinaryProtocol.java:321)
+	at org.apache.thrift.protocol.TBinaryProtocol.readMessageBegin(TBinaryProtocol.java:225)
+	at org.apache.thrift.TServiceClient.receiveBase(TServiceClient.java:77)
+	at br.ufu.miguelpereira.thrift.Operations$Client.recv_createVertex(Operations.java:172)
+	at br.ufu.miguelpereira.thrift.Operations$Client.createVertex(Operations.java:156)
+	at br.ufu.miguelpereira.view.Client.main(Client.java:71)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:282)
+	at java.lang.Thread.run(Thread.java:748)
+22-11-2017 21:10:07 DEBUG Client:41 - Inicializando o menu
+22-11-2017 21:15:07 DEBUG Client:41 - Inicializando o menu
