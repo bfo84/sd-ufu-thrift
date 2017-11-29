@@ -31,15 +31,17 @@ public class GraphHandler implements Operations.Iface {
     private TTransport[] transports;
     private TProtocol[] protocols;
     private Operations.Client[] clients;
-    private int serverPort; // number of the port of this server
+    public int serverPort; // number of the port of this server
     private int NUMBER_SERVERS; // number of servers
     private int serverId;
 
-    public void GraphHandler(String[] args) {
+    public GraphHandler(String [] args) {
+        System.out.println("Primeiro argumento: "+args[0]);
         serversPort = TableServer.getMapServers(args[0], args[2]);
 
         NUMBER_SERVERS = Integer.parseInt(args[0]);
         serverId = Integer.parseInt(args[1]);
+        System.out.println("ServerId: "+serverId);
         int firstPort = Integer.parseInt(args[2]);
         serverPort = firstPort + serverId;
 
@@ -156,6 +158,7 @@ public class GraphHandler implements Operations.Iface {
     @Override
     public boolean createVertex(int nome, int cor, String descricao, double peso) {
         int server = getServerId(nome);
+        System.out.println("Server: "+server);
         if (server != serverId) {
             try {
                 TTransport transport = connectToServerId(server);
@@ -165,13 +168,13 @@ public class GraphHandler implements Operations.Iface {
                 return p;
             } catch (Exception e) {
                 e.printStackTrace();
-                //throw
             }
         }
         synchronized (graph.getV()) { //Lock na lista para evitar duplicidade de nome
             if (graph.getV() != null) {
                 for (Vertex vertex : graph.getV()) {
                     if (vertex.getNome() == nome) {
+                        System.out.println("vertice: "+vertex.getNome());
                         return false;
                     }
                 }

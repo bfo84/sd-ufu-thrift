@@ -17,9 +17,10 @@ public class Server {
 
     public static void main(String [] args){
         try{
-            GraphHandler handler = new GraphHandler();
+            GraphHandler handler = new GraphHandler(args);
+            System.out.println(handler.serverPort);
             Operations.Processor processor = new Operations.Processor(handler);
-            TServerTransport serverTransport = new TServerSocket(Integer.parseInt(args[2]));
+            TServerTransport serverTransport = new TServerSocket(handler.serverPort);
             TServer server = new TThreadPoolServer(new TThreadPoolServer.Args(serverTransport).processor(processor));
             System.out.println("Servidor Inicializado...");
             server.serve();

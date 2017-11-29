@@ -8,11 +8,11 @@ import io.netty.util.internal.StringUtil;
 public class MD5 {
 
 	public static int getGenerateServerId(String vertice, String numServidores) throws Exception {
-
+		System.out.println("Vertice: "+vertice);
+		System.out.println("numServe: "+numServidores);
 		MessageDigest m = MessageDigest.getInstance("MD5");
 		m.update(vertice.getBytes(), 0, vertice.length());
-		System.out.print(new BigInteger(1, m.digest()).intValue());
-		return (new BigInteger(1, m.digest())).intValue();
+		return (new BigInteger(1, m.digest()).mod(new BigInteger(numServidores))).intValue();
 		
 	}
 	

@@ -43,8 +43,6 @@ public class Client {
             while (menu != 16) {
                 System.out.println("1 - Inserir Vertice");
                 System.out.println("2 - Inserir Aresta");
-                System.out.println("3 - Carregar Grafo");
-                System.out.println("4 - Salvar Grafo");
                 System.out.println("5 - Exibir Grafo");
                 System.out.println("6 - Remover Vertice");
                 System.out.println("7 - Remover Aresta");
