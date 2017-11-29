@@ -3,6 +3,7 @@ package br.ufu.miguelpereira.view;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import java.util.Scanner;
 
@@ -206,11 +207,18 @@ public class Client {
                         break;*/
 
                     case 10://Listar arestas de um vertice
-
+                        List<Edge> arestas;
                         System.out.println("<- Digite um vertice para listar suas arestas -> ");
                         System.out.println("Vertice X: ");
                         v1 = scan.nextInt();
-                        System.out.println(client.showEdgesOfVertex(v1));
+                        arestas = client.showEdgesOfVertex(v1);
+                        for (Edge e: arestas) {
+                            System.out.println("Aresta: " +
+                                    "(" + e.v1 + ", " + e.v2 + ") " +
+                            "Descrição: " + e.descricao +
+                            " Peso: " + e.peso +
+                            " Flag: (1 - unidirecional, 2 - Bidirecional)" + e.flag);
+                        }
                         break;
 
                     case 11://Listar vertice adjacentes

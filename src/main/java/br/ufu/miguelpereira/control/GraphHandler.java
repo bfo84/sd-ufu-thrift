@@ -578,11 +578,25 @@ public class GraphHandler implements Operations.Iface {
         }
 
         @Override
-        public List<Edge> showEdgesOfVertex ( int nomeV){
-            ArrayList<Edge> arestas = new ArrayList<>();
+        public List<Edge> showEdgesOfVertex (int nomeV){
+            int server = getServerId(nomeV);
+            List<Edge> arestas = new ArrayList<>();
+            if (server != serverId) {
+                try{
+                    TTransport transport = connectToServerId(server);
+                    Operations.Client client = createClientRequest(transport);
+                    arestas = client.showEdgesOfVertex(nomeV);
+                    disconnectServer(transport);
+                    return arestas;
+                }catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
             synchronized (graph.getA()) {
                 for (Edge a : graph.getA()) {
+                    System.out.println("Aresta: "+a.v1);
                     if (a.getV1() == nomeV || a.getV2() == nomeV) {
+                        System.out.println(nomeV);
                         arestas.add(a);
                     }
                 }

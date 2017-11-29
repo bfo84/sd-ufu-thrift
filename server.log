@@ -577,3 +577,23 @@ java.util.InputMismatchException: For input string: "9623746960823428376"
 28-11-2017 22:36:07 DEBUG Client:41 - Inicializando o menu
 28-11-2017 22:41:04 DEBUG Client:41 - Inicializando o menu
 28-11-2017 22:48:50 DEBUG Client:41 - Inicializando o menu
+28-11-2017 23:42:16 DEBUG Client:41 - Inicializando o menu
+28-11-2017 23:59:53 DEBUG Client:42 - Inicializando o menu
+29-11-2017 00:08:05 DEBUG Client:42 - Inicializando o menu
+29-11-2017 00:10:08 ERROR Client:248 - 
+java.util.InputMismatchException
+	at java.util.Scanner.throwFor(Scanner.java:864)
+	at java.util.Scanner.next(Scanner.java:1485)
+	at java.util.Scanner.nextInt(Scanner.java:2117)
+	at java.util.Scanner.nextInt(Scanner.java:2076)
+	at br.ufu.miguelpereira.view.Client.main(Client.java:56)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.codehaus.mojo.exec.ExecJavaMojo$1.run(ExecJavaMojo.java:282)
+	at java.lang.Thread.run(Thread.java:748)
+29-11-2017 00:10:18 DEBUG Client:42 - Inicializando o menu
+29-11-2017 00:39:59 DEBUG Client:42 - Inicializando o menu
+29-11-2017 00:45:48 DEBUG Client:42 - Inicializando o menu
+29-11-2017 01:00:12 DEBUG Client:42 - Inicializando o menu
