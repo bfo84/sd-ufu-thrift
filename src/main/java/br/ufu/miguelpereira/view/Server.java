@@ -32,5 +32,5 @@ public class Server {
 }
     /*
     mvn exec:java -Dexec.mainClass=br.ufu.miguelpereira.view.Client -Dexec.args="9094"
-    mvn exec:java -Dexec.mainClass=br.ufu.miguelpereira.view.Server -Dexec.args="1 0 9094"
+    mvn exec:java -Dexec.mainClass=br.ufu.miguelpereira.view.Server -Dexec.args="5 0 9094"
     */
