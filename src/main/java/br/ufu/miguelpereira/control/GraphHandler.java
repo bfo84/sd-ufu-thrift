@@ -56,7 +56,7 @@ public class GraphHandler implements Operations.Iface {
 
         try {
             for (Map.Entry<String, String> entry : serversPort.entrySet()) {
-                listOfServers[counter] = new TSocket(LOCALHOST, Integer.parseInt(entry.getKey()));
+                listOfServers[counter] = new TSocket(LOCALHOST, Integer.valueOf(entry.getValue()));
                 listOfServers[counter].open();
                 counter++;
             }
@@ -267,7 +267,7 @@ public class GraphHandler implements Operations.Iface {
     }
 
     @Override
-    public boolean deleteVertex(int nome) {
+    public boolean deleteEdgesOfVertex(int nome){
         ArrayList<Edge> forDeletion = new ArrayList<>();
         synchronized (graph.getA()) {
             for (Edge a : graph.getA()) {
@@ -279,9 +279,38 @@ public class GraphHandler implements Operations.Iface {
                 graph.getA().remove(a);
             }
         }
+        return true;
+    }
+
+    @Override
+    public boolean deleteVertex(int nome) {
+        int server = getServerId(nome); // Verifica o servidor que a aresta pertence.
+        if (server != serverId) { // Se não perterncer ao servidor atual, delega a tarefa.
+            try {
+                TTransport transport = connectToServerId(server);
+                Operations.Client client = createClientRequest(transport);
+                boolean p = client.deleteVertex(nome);
+                disconnectServer(transport);
+                return p;
+            } catch (Exception e) {
+                e.printStackTrace();
+                //throw
+            }
+        } // Se o vertice for local, manda uma solicitacao para todos os outros deletarem arestas que contem o vertice.
         for (Vertex vertex : graph.getV()) {
             synchronized (vertex) {
                 if (vertex.getNome() == nome) {
+                    try {
+                        TTransport[] servers = startServers();
+                        Operations.Client[] clients = createClients(servers);
+                        for(Operations.Client client : clients){
+                            client.deleteEdgesOfVertex(nome);
+                        }
+                        disconnectServers(servers);
+                    }catch(Exception e) {
+                        e.printStackTrace();
+                    }// Deleta arestas locais e o vertice local.
+                    deleteEdgesOfVertex(nome);
                     graph.getV().remove(vertex);
                     return true;
                 }
